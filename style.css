@@ -62,6 +62,7 @@ body {
 .nav-icon {
   width: 28px;
   height: 28px;
+  display: block;
 }
 
 /* HEADER => Title */
@@ -348,7 +349,7 @@ body {
   100% { transform: translateX(0%); }
 }
 
-/* Assets, multiplier, leaderboards => same style */
+/* Shared sections => same style */
 .assets-section, .multiplier-section, .leaderboard-section, .fent-counter-section {
   background: rgba(17,17,17,0.7);
   border-radius: 5px;
@@ -401,6 +402,63 @@ body {
   color: #ccc;
   line-height: 1.3em;
 }
+
+/* Pumpfun/Telegram section */
+.pumpfun-section {
+  background: rgba(17,17,17,0.7);
+  border-radius: 5px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.6);
+  margin-bottom: 20px;
+}
+.pumpfun-section h2 {
+  font-family: 'PressStart2P', sans-serif;
+  font-size: 1.2em;
+  color: #ffb347;
+  margin-bottom: 10px;
+}
+.pumpfun-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* keeps them centered */
+  align-items: center;     /* vertical center */
+  gap: 30px;
+  max-width: 600px;       /* optional: so they don’t stretch too far */
+  margin: 0 auto;         /* center the wrapper itself */
+}
+.pumpfun-item {
+  width: 180px;
+  margin: 10px auto;
+  background: #222;
+  border-radius: 5px;
+  padding: 10px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.6);
+  transition: transform 0.2s;
+  text-align: center;
+}
+.pumpfun-item:hover {
+  transform: scale(1.03);
+}
+.pumpfun-item p {
+  margin-top: 8px;
+  font-size: 0.85em;
+  color: #ccc;
+  line-height: 1.3em;
+  font-family: 'RobotoBlack', sans-serif;
+}
+.pumpfun-circle {
+  background: #555; 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.pumpfun-circle .nav-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Leaderboard form etc. */
 .leaderboard-form {
   margin: 10px 0;
 }

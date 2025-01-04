@@ -21,6 +21,12 @@
       <a href="https://www.instagram.com/flappyfloyd/" target="_blank" class="icon-circle">
         <img src="./assets/instagram.png" alt="Instagram" class="nav-icon" />
       </a>
+      <!-- PumpFun icon -->
+      <a href="https://pump.fun/coin/GQGcZX7BFsHadhZK4jv3jD3ATKnjSVDZqhjMiEXopump" 
+         target="_blank" 
+         class="icon-circle">
+        <img src="./assets/pumpfunny.png" alt="PumpFun" class="nav-icon" />
+      </a>
     </div>
   </div>
 
@@ -79,10 +85,11 @@
 
           <img
             id="gameOverImage"
-            src="./assets/pixelated.png"
+            src="./assets/pixelated2.png"
             alt="Game Over Pixelated"
             style="display: none; width:200px; height:200px; margin-bottom:10px;"
           />
+          <audio id="gameOverAudio" src="./assets/gameover.wav"></audio>
 
           <button id="restartGameBtn" class="big-button" style="display: none;">Restart</button>
         </div>
@@ -99,6 +106,28 @@
       </div>
       <div id="plusOneContainer"></div>
     </div>
+
+    <!-- PUMPFUN/TELEGRAM SECTION => moved above Game Assets -->
+    <section class="pumpfun-section">
+      <h2>Check Out Pump.Fun and Telegram!</h2>
+      <div class="pumpfun-wrapper">
+        <div class="pumpfun-item">
+          <a href="https://pump.fun/coin/GQGcZX7BFsHadhZK4jv3jD3ATKnjSVDZqhjMiEXopump"
+             target="_blank" 
+             class="icon-circle pumpfun-circle">
+            <img src="./assets/pumpfunny.png" alt="PumpFun" class="nav-icon" />
+          </a>
+          <p>Learn more about the coin at Pump.Fun!</p>
+        </div>
+        <div class="pumpfun-item">
+          <a href="https://t.me/flappyfloyd" target="_blank" class="icon-circle pumpfun-circle">
+            <img src="./assets/telegram_logo.png" alt="Telegram" class="nav-icon" />
+          </a>
+          <!-- CHANGED text here: "Join our Telegram community!" -->
+          <p>Join our Telegram community!</p>
+        </div>
+      </div>
+    </section>
 
     <!-- Game Assets Section -->
     <section class="assets-section">
@@ -132,8 +161,8 @@
 
     <!-- Leaderboard -->
     <section class="leaderboard-section">
-      <h2>Global Leaderboard (Local)</h2>
-      <p>Share your best score here! (Stored in localStorage, not synced online)</p>
+      <h2>Global Leaderboard</h2>
+      <p>Share your best score here!</p>
       <div class="leaderboard-form">
         <input type="text" id="playerName" placeholder="Your Name" />
         <button id="shareScoreBtn">Share Highscore</button>
@@ -167,8 +196,6 @@
   <footer class="footer">
     <p>© 2024 FlappyFloyd. Powered by Solana.</p>
   </footer>
-
-  <!-- No Firebase scripts! -->
 
   <!-- Our main logic -->
   <script src="script.js"></script>
