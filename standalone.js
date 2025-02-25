@@ -135,11 +135,6 @@ function lerp(from, to, weight) {
 	return from + weight * (to - from)
 }
 
-function jump() {
-	if (!gamePaused && gameState === "running") {
-		velocity = lift;
-	}
-}
 document.addEventListener("keydown", (e) => {
 	if ("value" in document.activeElement) {
 		return;

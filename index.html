@@ -1,201 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>FlappyFloyd on Solana</title>
-  <!-- Favicon -->
-  <link rel="icon" href="./assets/flappyfloydlogo.png" type="image/png" />
-  <link rel="stylesheet" href="style.css" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta charset="UTF-8" />
+	<title>FlappyFloyd on Solana</title>
+	<link rel="icon" href="assets/flappyfloydlogo.png" type="image/png" />
+	<link rel="stylesheet" href="style.css" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body>
-  <!-- TOP: Socials -->
-  <div class="header-socials-top">
-    <div class="socials-container">
-      <a href="https://t.me/flappyfloyd" target="_blank" class="icon-circle">
-        <img src="./assets/telegram_logo.png" alt="Telegram" class="nav-icon" />
-      </a>
-      <a href="https://x.com/flappyfloyd" target="_blank" class="icon-circle">
-        <img src="./assets/x_logo.png" alt="X" class="nav-icon" />
-      </a>
-      <a href="https://www.instagram.com/flappyfloyd/" target="_blank" class="icon-circle">
-        <img src="./assets/instagram.png" alt="Instagram" class="nav-icon" />
-      </a>
-      <!-- PumpFun icon -->
-      <a href="https://pump.fun/coin/GQGcZX7BFsHadhZK4jv3jD3ATKnjSVDZqhjMiEXopump" 
-         target="_blank" 
-         class="icon-circle">
-        <img src="./assets/pumpfunny.png" alt="PumpFun" class="nav-icon" />
-      </a>
-    </div>
-  </div>
 
-  <!-- HEADER => Title + Subtitle -->
-  <header class="header">
-    <div class="title-box">
-      <h1 class="main-title">FlappyFloyd</h1>
-      <h2 class="subtitle">on Solana</h2>
-    </div>
-  </header>
+	<!-- TOP: Socials -->
+	<div class="header-socials-top">
+		<div class="socials-container">
+			<a href="https://t.me/flappyfloyd" target="_blank" class="icon-circle">
+				<img src="assets/telegram_logo.png" alt="Telegram" class="nav-icon" />
+			</a>
+			<a href="https://x.com/flappyfloyd" target="_blank" class="icon-circle">
+				<img src="assets/x_logo.png" alt="X" class="nav-icon" />
+			</a>
+			<a href="https://www.instagram.com/flappyfloyd/" target="_blank" class="icon-circle">
+				<img src="assets/instagram.png" alt="Instagram" class="nav-icon" />
+			</a>
+			<!-- Pumpfun icon -->
+			<a
+				href="https://pump.fun/coin/GQGcZX7BFsHadhZK4jv3jD3ATKnjSVDZqhjMiEXopump"
+				target="_blank"
+				class="icon-circle"
+			>
+				<img src="assets/pumpfunny.png" alt="PumpFun" class="nav-icon" />
+			</a>
+		</div>
+	</div>
 
-  <div class="main-content">
+	<!-- HEADER => Title + Subtitle -->
+	<header class="header">
+		<div class="title-box">
+			<h1 class="main-title">FlappyFloyd</h1>
+			<h2 class="subtitle">on Solana</h2>
+		</div>
+	</header>
 
-    <!-- Contract Section -->
-    <section class="contract-section">
-      <h2 class="contract-header">Contract Address</h2>
-      <div class="contract-line">
-        <span id="contractPlaceholder">GQGcZX7BFsHadhZK4jv3jD3ATKnjSVDZqhjMiEXopump</span>
-        <button id="copyContractBtn">COPY</button>
-      </div>
-    </section>
+	<div class="main-content">
 
-    <!-- GAME CONTAINER -->
-    <div class="game-container">
-      <canvas id="gameCanvas" width="360" height="640"></canvas>
+		<!-- Contract Section -->
+		<section class="contract-section">
+			<h2 class="contract-header">Contract Address</h2>
+			<div class="contract-line">
+				<span id="contractPlaceholder">GQGcZX7BFsHadhZK4jv3jD3ATKnjSVDZqhjMiEXopump</span>
+				<button id="copyContractBtn">COPY</button>
+			</div>
+		</section>
 
-      <!-- Top Row => Pause & Mute + Highscore -->
-      <div class="top-row">
-        <div class="game-controls">
-          <button id="pauseBtn" title="Pause/Resume">❚❚</button>
-          <button id="muteBtn" title="Mute/Unmute">🔊</button>
-        </div>
-        <div id="topHighscoreContainer">
-          <span id="topHighscoreText">Highscore: 0</span>
-        </div>
-      </div>
+		<!-- GAME CONTAINER -->
+		<div class="game-container">
+			<canvas id="gameCanvas" width="360" height="640"></canvas>
 
-      <!-- HUD (Hearts pinned) -->
-      <div id="hud"></div>
+			<!-- Top Row => Pause & Mute + Highscore -->
+			<div class="top-row">
+				<div class="game-controls">
+					<button id="pauseBtn" title="Pause/Resume">❚❚</button>
+					<button id="muteBtn" title="Mute/Unmute">🔊</button>
+				</div>
+				<div id="topHighscoreContainer">
+					<span id="topHighscoreText">Highscore: 0</span>
+				</div>
+			</div>
 
-      <!-- In-game Score & multiplier -->
-      <div id="inGameScoreContainer">
-        <div id="inGameScore">0</div>
-        <div id="multiplierText"></div>
-      </div>
+			<!-- HUD (Hearts pinned) -->
+			<div id="hud"></div>
 
-      <!-- Single overlay => Start + GameOver -->
-      <div class="overlay" id="overlay">
-        <div class="overlay-content">
-          <button id="startBtn" class="big-button">Start Game</button>
+			<!-- In-game Score & multiplier -->
+			<div id="inGameScoreContainer">
+				<div id="inGameScore">0</div>
+				<div id="multiplierText"></div>
+			</div>
 
-          <p id="scoreText">Score: 0</p>
-          <p id="highScoreText">Highscore: 0</p>
+			<!-- Single overlay => Start + GameOver -->
+			<div class="overlay" id="overlay">
+				<div class="overlay-content">
+					<button id="startBtn" class="big-button">Start Game</button>
+					<p id="scoreText">Score: 0</p>
+					<p id="highScoreText">Highscore: 0</p>
+					<p id="gameOverText" style="display: none;">Game Over!</p>
+					<img
+						id="gameOverImage"
+						src="assets/pixelated2.png"
+						alt="Game Over Pixelated"
+						style="display: none; width:200px; height:200px; margin-bottom:10px;"
+					/>
+					<audio id="gameOverAudio" src="assets/gameover.wav"></audio>
+					<button id="restartGameBtn" class="big-button" style="display: none;">Restart</button>
+				</div>
+			</div>
 
-          <p id="gameOverText" style="display: none;">Game Over!</p>
+			<!-- Quote marquee -->
+			<div class="quote-marquee">
+				<div class="quotes">
+					<div class="quote">"Watch out for that knee!"</div>
+					<div class="quote">"Fent, fent, fent..."</div>
+					<div class="quote">"Knock that pipe down!"</div>
+					<div class="quote">"Up, up, and away!"</div>
+				</div>
+			</div>
+			<div id="plusOneContainer"></div>
+		</div>
 
-          <img
-            id="gameOverImage"
-            src="./assets/pixelated2.png"
-            alt="Game Over Pixelated"
-            style="display: none; width:200px; height:200px; margin-bottom:10px;"
-          />
-          <audio id="gameOverAudio" src="./assets/gameover.wav"></audio>
+		<!-- PUMPFUN/TELEGRAM SECTION -->
+		<section class="pumpfun-section">
+			<h2>Check Out Pump.Fun and Telegram!</h2>
+			<div class="pumpfun-wrapper">
+				<div class="pumpfun-item">
+					<a
+						href="https://pump.fun/coin/GQGcZX7BFsHadhZK4jv3jD3ATKnjSVDZqhjMiEXopump"
+						target="_blank"
+						class="icon-circle pumpfun-circle"
+					>
+						<img src="assets/pumpfunny.png" alt="PumpFun" class="nav-icon" />
+					</a>
+					<p>Learn more about the coin at Pump.Fun!</p>
+				</div>
+				<div class="pumpfun-item">
+					<a
+						href="https://t.me/flappyfloyd"
+						target="_blank"
+						class="icon-circle pumpfun-circle"
+					>
+						<img src="assets/telegram_logo.png" alt="Telegram" class="nav-icon" />
+					</a>
+					<p>Join our Telegram community!</p>
+				</div>
+			</div>
+		</section>
 
-          <button id="restartGameBtn" class="big-button" style="display: none;">Restart</button>
-        </div>
-      </div>
+		<!-- SHARE => typed name as key -->
+		<section class="leaderboard-section">
+			<h2>Global Leaderboard</h2>
+			<p>Submit your best score once!</p>
+			<div class="leaderboard-form">
+				<input type="text" id="playerName" placeholder="Your Name" />
+				<button id="shareScoreBtn">Share Highscore</button>
+			</div>
+			<!-- local scoreboard hidden -->
+			<ul id="leaderboardList"></ul>
 
-      <!-- Quote marquee -->
-      <div class="quote-marquee">
-        <div class="quotes">
-          <div class="quote">"Watch out for that knee!"</div>
-          <div class="quote">"Fent, fent, fent..."</div>
-          <div class="quote">"Knock that pipe down!"</div>
-          <div class="quote">"Up, up, and away!"</div>
-        </div>
-      </div>
-      <div id="plusOneContainer"></div>
-    </div>
+			<!-- embedded scoreboard container -->
+			<div id="embeddedLeaderboardContainer"></div>
+		</section>
 
-    <!-- PUMPFUN/TELEGRAM SECTION -->
-    <section class="pumpfun-section">
-      <h2>Check Out Pump.Fun and Telegram!</h2>
-      <div class="pumpfun-wrapper">
-        <div class="pumpfun-item">
-          <a href="https://pump.fun/coin/GQGcZX7BFsHadhZK4jv3jD3ATKnjSVDZqhjMiEXopump"
-             target="_blank" 
-             class="icon-circle pumpfun-circle">
-            <img src="./assets/pumpfunny.png" alt="PumpFun" class="nav-icon" />
-          </a>
-          <p>Learn more about the coin at Pump.Fun!</p>
-        </div>
-        <div class="pumpfun-item">
-          <a href="https://t.me/flappyfloyd" target="_blank" class="icon-circle pumpfun-circle">
-            <img src="./assets/telegram_logo.png" alt="Telegram" class="nav-icon" />
-          </a>
-          <p>Join our Telegram community!</p>
-        </div>
-      </div>
-    </section>
+		<!-- Game Assets Section -->
+		<section class="assets-section">
+			<h2>Game Assets</h2>
+			<div class="assets-wrapper">
+				<!-- FlappyFloyd Card -->
+				<div class="asset-item">
+					<img src="assets/flappyfloyd.png" alt="FlappyFloyd" />
+					<h3>FlappyFloyd</h3>
+					<p style="font-size:0.8rem; line-height:1.2em;">
+						A special character you guide through the obstacles.
+					</p>
+				</div>
 
-    <!-- Game Assets Section -->
-    <section class="assets-section">
-      <h2>Game Assets</h2>
-      <div class="assets-wrapper">
-        <div class="asset-item">
-          <img src="./assets/flappyfloyd.png" alt="FlappyFloyd" />
-          <h3>FlappyFloyd</h3>
-          <p>A special character you guide through the obstacles.</p>
-        </div>
-        <div class="asset-item">
-          <img src="./assets/bottle.png" alt="Fent" />
-          <h3>Fent</h3>
-          <p>
-            Fent can give a multiplier to your score, and it can also restore hearts if
-            you collect enough. Floyd feeds on Fent.
-          </p>
-        </div>
-      </div>
-    </section>
+				<!-- Fent Card -->
+				<div class="asset-item">
+					<img src="assets/bottle.png" alt="Fent" />
+					<h3>Fent</h3>
+					<p style="font-size:0.8rem; line-height:1.2em;">
+						Fent can give a multiplier to your score, and it can also restore hearts if
+						you collect enough. Floyd feeds on Fent.
+					</p>
+				</div>
 
-    <!-- Multiplier Info -->
-    <section class="multiplier-section">
-      <h2>How Multipliers Work</h2>
-      <p>
-        Every time you collect 3 Fent in a row without crashing, you get a higher
-        multiplier. If you hit a knee, your multiplier resets to x1. If your multiplier
-        is above x1, your score will appear in rainbow color!
-      </p>
-    </section>
+				<!-- Coming Soon Card -->
+				<div class="asset-item placeholder-item">
+					<div class="coming-soon-frame">
+						<span class="big-red-text">Coming Soon</span>
+					</div>
+					<h3>Coming Soon</h3>
+					<p style="font-size:0.8rem; line-height:1.2em;">
+						New maps, rewards for playing and more sounddesign!
+					</p>
+				</div>
+			</div>
+		</section>
 
-    <!-- Leaderboard -->
-    <section class="leaderboard-section">
-      <h2>Global Leaderboard</h2>
-      <p>Share your best score here!</p>
-      <div class="leaderboard-form">
-        <input type="text" id="playerName" placeholder="Your Name" />
-        <button id="shareScoreBtn">Share Highscore</button>
-      </div>
-      <ul id="leaderboardList"></ul>
-    </section>
+		<!-- Multiplier Info -->
+		<section class="multiplier-section">
+			<h2>How Multipliers Work</h2>
+			<p>
+				Every time you collect 3 Fent in a row without crashing, you get a higher
+				multiplier. If you hit a knee, your multiplier resets to x1. If your multiplier
+				is above x1, your score will appear in rainbow color!
+			</p>
+		</section>
 
-    <!-- Fent Counters -->
-    <section class="fent-counter-section">
-      <h2>Fent Collected</h2>
-      <div class="fent-counters">
-        <div class="fent-user">
-          <img src="./assets/bottle.png" alt="Fent" class="bottle-icon" />
-          <span>Current Session:</span>
-          <span id="userFentTotal">0</span>
-        </div>
-        <div class="fent-global">
-          <div class="bottle-stack">
-            <img src="./assets/bottle.png" alt="Fent" class="bottle-icon stack1" />
-            <img src="./assets/bottle.png" alt="Fent" class="bottle-icon stack2" />
-            <img src="./assets/bottle.png" alt="Fent" class="bottle-icon stack3" />
-          </div>
-          <span>Global:</span>
-          <span id="globalFentTotal">0</span>
-        </div>
-      </div>
-    </section>
+		<!-- Fent Counters -->
+		<section class="fent-counter-section">
+			<h2>Fent Collected</h2>
+			<div class="fent-counters">
+				<div class="fent-user">
+					<img src="assets/bottle.png" alt="Fent" class="bottle-icon" />
+					<span>Current Session:</span>
+					<span id="userFentTotal">0</span>
+				</div>
+				<div class="fent-global">
+					<div class="bottle-stack">
+						<img src="assets/bottle.png" alt="Fent" class="bottle-icon stack1" />
+						<img src="assets/bottle.png" alt="Fent" class="bottle-icon stack2" />
+						<img src="assets/bottle.png" alt="Fent" class="bottle-icon stack3" />
+					</div>
+					<span>Global:</span>
+					<span id="globalFentTotal">0</span>
+				</div>
+			</div>
+		</section>
 
-  </div> <!-- end .main-content -->
+	</div> <!-- end .main-content -->
 
-  <footer class="footer">
-    <p>© 2024 FlappyFloyd. Powered by Solana.</p>
-  </footer>
+	<footer class="footer">
+		<p>© 2024 FlappyFloyd. Powered by Solana.</p>
+	</footer>
 
-  <script src="script.js"></script>
+	<!-- Firebase v8 (non-ESM) -->
+	<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+	<script src="client.js" async defer></script>
 </body>
 </html>
