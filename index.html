@@ -13,10 +13,10 @@
 	<div class="header-socials-top">
 		<div class="socials-container">
 			<a href="https://t.me/flappyfloyd" target="_blank" class="icon-circle">
-				<img src="assets/telegram_logo.png" alt="Telegram" class="nav-icon" />
+				<img src="assets/telegram.png" alt="Telegram" class="nav-icon" />
 			</a>
 			<a href="https://x.com/flappyfloyd" target="_blank" class="icon-circle">
-				<img src="assets/x_logo.png" alt="X" class="nav-icon" />
+				<img src="assets/x.png" alt="X" class="nav-icon" />
 			</a>
 			<a href="https://www.instagram.com/flappyfloyd/" target="_blank" class="icon-circle">
 				<img src="assets/instagram.png" alt="Instagram" class="nav-icon" />
@@ -76,20 +76,49 @@
 			</div>
 
 			<!-- Single overlay => Start + GameOver -->
-			<div class="overlay" id="overlay">
-				<div class="overlay-content">
-					<button id="startBtn" class="big-button">Start Game</button>
-					<p id="scoreText">Score: 0</p>
-					<p id="highScoreText">Highscore: 0</p>
-					<p id="gameOverText" style="display: none;">Game Over!</p>
+			<div class="overlay" id="overlay" data-page="start">
+				<div id="startPage" class="overlay-content">
+					<div>
+						<h2>FlappyFloyd Classic</h2>
+						<button type="button" id="startBtn" class="big-button">Start Game</button>
+						<p id="scoreText">Score: 0</p>
+						<p id="highScoreText">Highscore: 0</p>
+					</div>
+					<hr>
+					<h3>All gamemodes:</h3>
+					<div class="button-grid">
+						<button type="button" class="grid-button" style="border: 2px solid green;">Classic</button>
+						<button type="button" class="grid-button">Battle royale</button>
+						<button type="button" class="grid-button">Race</button>
+						<button type="button" class="grid-button">Boss rush</button>
+					</div>
+					<div>
+						<input type="text" placeholder="Enter party code">
+						<button type="button">Join</button>
+					</div>
+				</div>
+				<div id="loadingPage" class="overlay-content">
+					<p>Matchmaking...</p>
+				</div>
+				<div id="lobbyPage" class="overlay-content">
+					<p>Lobby joined... Waiting for game to start...</p>
+					<div style="border: 1px solid grey; padding: 10px; margin: 10px;">
+						<p>Players:</p>
+						<ul id="lobbyPlayers">
+
+						</ul>
+					</div>
+				</div>
+				<div id="gameOverPage" class="overlay-content">
+					<p id="gameOverText">Game Over!</p>
 					<img
 						id="gameOverImage"
 						src="assets/pixelated2.png"
 						alt="Game Over Pixelated"
-						style="display: none; width:200px; height:200px; margin-bottom:10px;"
+						style=" width:200px; height:200px; margin-bottom:10px;"
 					/>
 					<audio id="gameOverAudio" src="assets/gameover.wav"></audio>
-					<button id="restartGameBtn" class="big-button" style="display: none;">Restart</button>
+					<button type="button" id="restartGameBtn" class="big-button">Restart</button>
 				</div>
 			</div>
 
@@ -125,7 +154,7 @@
 						target="_blank"
 						class="icon-circle pumpfun-circle"
 					>
-						<img src="assets/telegram_logo.png" alt="Telegram" class="nav-icon" />
+						<img src="assets/telegram.png" alt="Telegram" class="nav-icon" />
 					</a>
 					<p>Join our Telegram community!</p>
 				</div>

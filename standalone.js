@@ -198,9 +198,9 @@ function scrollGround(dt) {
 
 // PIPES
 const pipeTop = new Image();
-pipeTop.src = "assets/pipeTop.png";
+pipeTop.src = "assets/pipetop.png";
 const pipeBottom = new Image();
-pipeBottom.src = "assets/pipeBottom.png";
+pipeBottom.src = "assets/pipebottom.png";
 const defaultPipeWidth = 150
 const defaultPipeHeight = 390;
 const defaultPipeSpeed = 7;

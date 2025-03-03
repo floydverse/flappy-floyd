@@ -47,30 +47,6 @@ function jump() {
 	ws.send(JSON.stringify(packet));
 }
 
-function hideStartUI() {
-	overlay.style.display = "none";
-	gameOverImage.style.display = "none";
-	gameOverAudio.pause();
-	gameOverAudio.currentTime = 0;
-	gameOverText.style.display = "none";
-	restartGameBtn.style.display = "none";
-}
-
-startBtn.addEventListener("click", () => {
-	startBtn.blur();
-	startBtn.style.display = "none";
-	hideStartUI();
-	try {
-		bgMusic.currentTime = 0;
-		bgMusic.play();
-	} catch (e) {
-		console.warn("Audio blocked:", e);
-	}
-
-	const packet = { "action": "start" };
-	ws.send(JSON.stringify(packet));
-});
-
 /* --------------------------------------------------------------------------------------------------- */
 /* Rendering received game data from server                                                            */
 /* --------------------------------------------------------------------------------------------------- */
@@ -78,13 +54,16 @@ startBtn.addEventListener("click", () => {
 function lerp(from, to, weight) {
 	return from + weight * (to - from);
 }
+function clamp(value, min, max) {
+	return Math.min(max, Math.max(min, value));c
+}
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("gameCanvas"));
 const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 ctx.imageSmoothingEnabled = false;
 
 // BG music
-const bgMusic = new Audio("assets/flappyfloydsolana.wav");
+const bgMusic = new Audio("assets/flappyfloydonsolana.mp3");
 bgMusic.loop = true;
 
 // Graphics
@@ -95,34 +74,19 @@ ground.src = "assets/ground.png";
 const flappyFloyd = new Image();
 flappyFloyd.src = "assets/flappyfloyd.png";
 const pipeTop = new Image();
-pipeTop.src = "assets/pipeTop.png";
+pipeTop.src = "assets/pipetop.png";
 const pipeBottom = new Image();
-pipeBottom.src = "assets/pipeBottom.png";
+pipeBottom.src = "assets/pipebottom.png";
 
 // Floyd
 let floydInfos = new Map() // id : { floydAngle, isMe }
+const floydAngleDamping = 6;
+const floydAngleSpeed = 0.22;
 
 // Pipe
 const defaultPipeGap = 180;
 
 const gameState = {
-	action: "setGameState",
-	data: {
-		pipes: [],
-		bottles: [],
-		score:  0,
-		hearts: 5,
-		fentStreak: 0,
-		fentMultiplier: 0,
-		currentMultiplier: 0,
-		highScore: 0,
-		floyd: {
-			x: 50,
-			y: 200,
-			width: 100,
-			height: 75
-		}
-	}
 }
 let floyds = [];
 
@@ -130,6 +94,28 @@ function updateScoreUI(score, highScore) {
 	scoreText.textContent = "Score: " + score;
 	highScoreText.textContent = "Highscore: " + highScore;
 	topHighscoreText.textContent = "Highscore: " + highScore;
+}
+
+function updateInGameScore(score, multiplier) {
+	inGameScore.textContent = score.toString();
+	if (multiplier > 1) {
+		let hue = (performance.now() / 10) % 360;
+		inGameScore.style.color = `hsl(${hue},100%,50%)`;
+		multiplierText.style.display = "block";
+		multiplierText.textContent = "x" + multiplier;
+	}
+	else {
+		inGameScore.style.color = "#ffdb4d";
+		multiplierText.style.display = "none";
+	}
+}
+
+function showPlusOne(amount) {
+	let plusOne = document.createElement("div");
+	plusOne.className = "plusOne";
+	plusOne.textContent = amount;
+	plusOneContainer.appendChild(plusOne);
+	setTimeout(() => plusOneContainer.removeChild(plusOne), 1000);
 }
 
 function updateHeartsUI(hearts) {
@@ -142,34 +128,20 @@ function updateHeartsUI(hearts) {
 	}
 }
 
-function updateInGameScore() {
-	inGameScore.textContent = score.toString();
-	if (currentMultiplier > 1) {
-		let hue = (performance.now() / 10) % 360;
-		inGameScore.style.color = `hsl(${hue},100%,50%)`;
-		multiplierText.style.display = "block";
-		multiplierText.textContent = "x" + currentMultiplier;
-	}
-	else {
-		inGameScore.style.color = "#ffdb4d";
-		multiplierText.style.display = "none";
-	}
-}
-
-const BG_WIDTH = 361, BG_HEIGHT = 640;
-let bgX1 = 0, bgX2 = BG_WIDTH;
-let bgScrollSpeed = 0.1;
+const bgWidth = 361, bgHeight = 640;
+let bgX1 = 0, bgX2 = bgWidth;
+let bgScrollSpeed = 64.0;
 function scrollBackground(dt) {
 	bgX1 -= bgScrollSpeed * dt;
 	bgX2 -= bgScrollSpeed * dt;
 	let dx1 = Math.floor(bgX1), dx2 = Math.floor(bgX2);
-	ctx.drawImage(bgImg, dx1, 0, BG_WIDTH, BG_HEIGHT);
-	ctx.drawImage(bgImg, dx2, 0, BG_WIDTH, BG_HEIGHT);
-	if (dx1 <= -BG_WIDTH) bgX1 = dx2 + BG_WIDTH;
-	if (dx2 <= -BG_WIDTH) bgX2 = dx1 + BG_WIDTH;
+	ctx.drawImage(bgImg, dx1, 0, bgWidth, bgHeight);
+	ctx.drawImage(bgImg, dx2, 0, bgWidth, bgHeight);
+	if (dx1 <= -bgWidth) bgX1 = dx2 + bgWidth;
+	if (dx2 <= -bgWidth) bgX2 = dx1 + bgWidth;
 }
 
-let groundScrollSpeed = 0.2;
+let groundScrollSpeed = 128.0;
 let groundX1 = 0, groundX2 = 360;
 let floorHeight = 56;
 function scrollGround(dt) {
@@ -186,12 +158,13 @@ function scrollGround(dt) {
 let lastFrame = Date.now()
 function mainLoop() {
 	const now = Date.now()
-	const state = gameState.data
-	let dt = now - lastFrame
+	const state = gameState
+	let dt = (now - lastFrame) / 1000
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	// Draw UI
 	updateScoreUI(state.score, state.highScore)
+	updateInGameScore(state.score, state.currentMultiplier)
 	updateHeartsUI(state.hearts)
 
 	// Draw background
@@ -217,8 +190,16 @@ function mainLoop() {
 	// Draw other floyds
 	for (const floyd of floyds) {
 		const info = floydInfos.get(floyd.id)
+
+		// Client side prediction / interoplation
 		if (!isNaN(floyd.velocity)) {
-			info.floydAngle = Math.min(Math.max(Math.PI/2), lerp(info.floydAngle, floyd.velocity * Math.PI / 90, 0.05));
+			floyd.y += floyd.velocity * dt;
+		}
+
+		// Floyd angle
+		if (!isNaN(floyd.velocity)) {
+			const targetAngle = floyd.velocity * (Math.PI / 90) / floydAngleDamping;
+			info.floydAngle = clamp(lerp(info.floydAngle, targetAngle, floydAngleSpeed), -Math.PI / 2, Math.PI / 2);
 		}
 
 		// Draw floyd
@@ -227,6 +208,8 @@ function mainLoop() {
 		ctx.rotate(info.floydAngle);
 		ctx.drawImage(flappyFloyd, -floyd.width / 2, -floyd.height / 2, floyd.width, floyd.height);
 		ctx.restore();
+
+		// Draw username
 		ctx.save()
 		ctx.textAlign = "center"
 		ctx.fillStyle = "yellow"
@@ -241,7 +224,7 @@ function mainLoop() {
 requestAnimationFrame(mainLoop);
 
 function updateGameState(data) {
-	gameState.data = data;
+	gameState = data;
 }
 
 function updateFloyds(data) {
@@ -257,6 +240,35 @@ function updateFloyds(data) {
 	}
 }
 
+
+startBtn.addEventListener("click", () => {
+	const packet = { "action": "joinGame" };
+	ws.send(JSON.stringify(packet));
+	overlay.dataset.page = "loading";
+});
+
+function sessionJoin(data) {
+	overlay.dataset.page = "lobby";
+	console.log(data)
+
+	lobbyPlayers.innerHTML = "";
+	for (const player of data.players) {
+		let li = document.createElement("li");
+		li.textContent = player.username;
+		lobbyPlayers.appendChild(li);
+	}
+}
+
+function gameStart(data) {
+	overlay.dataset.page = "game";
+	canvas.width = data.worldWidth;
+	canvas.height = data.worldHeight;
+}
+
+/* --------------------------------------------------------------------------------------------------- */
+/* Websocket connection                                                                                */
+/* --------------------------------------------------------------------------------------------------- */
+
 const ws = new WebSocket("ws://localhost:3000");
 
 ws.addEventListener("open", function(e) {
@@ -268,14 +280,23 @@ ws.addEventListener("message", function(e) {
 		return;
 	}
 	try {
-		const packet = JSON.parse(e.data)
+		const packet = JSON.parse(e.data);
+		const data = packet.data;
 		switch (packet.action) {
+			case "sessionJoin": {
+				sessionJoin(data);
+				break;
+			}
+			case "gameStart": {
+				gameStart(data);
+				break;
+			}
 			case "updateGameState": {
-				updateGameState(packet.data);
+				updateGameState(data);
 				break;
 			}
 			case "updateFloyds": {
-				updateFloyds(packet.data);
+				updateFloyds(data);
 				break;
 			}
 		}
