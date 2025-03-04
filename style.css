@@ -17,6 +17,11 @@
 button:focus {
 	outline: none;
 }
+button:disabled {
+	opacity: 0.6;
+    pointer-events: none;
+    user-select: none;
+}
 
 /* BODY BACKGROUND => removed sitebackground.png */
 body {

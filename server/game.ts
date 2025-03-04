@@ -27,38 +27,40 @@ export class Game {
 	// State
 	#gameState: GameState;
 	#session: Session;
-	#worldWidth: number;
-	#worldHeight: number;
+	worldWidth: number;
+	worldHeight: number;
 
 	// Map
 	#players: ServerWebSocket<PlayerData>[];
-	#floyds: Floyd[];
-	#objects: ICollidable[];
+	floyds: Floyd[];
+	objects: ICollidable[];
 
 	#maxFloydId = 0
 	#maxObjectId = 0
 
 	constructor(session:Session) {
 		this.#session = session;
-		this.#worldHeight = 640;
-		this.#worldWidth = 360;
+		this.worldHeight = 640;
+		this.worldWidth = 360;
 		this.#gameState = GameState.Pending;
 		this.#maxFloydId = 0;
 
 		this.#players = [];
-		this.#objects = [];
-		this.#floyds = [];
+		this.objects = [];
+		this.floyds = [];
 	}
 
 	addPlayer(ws: ServerWebSocket<PlayerData>) {
-		this.#players.push(ws);
-
+		// Spawn in floyd for player
 		const floyd = new Floyd(ws, this, this.#maxFloydId++);
-		this.#floyds.push(floyd);
+		this.floyds.push(floyd);
 		ws.data.floyd = floyd;
+
+		// Add player
+		this.#players.push(ws);
 	}
 
-	#isColliding(r1:ICollidable, r2:ICollidable) {
+	isColliding(r1:ICollidable, r2:ICollidable) {
 		return (
 			r1.x < r2.x + r2.width &&
 			r1.x + r1.width > r2.x &&
@@ -69,10 +71,27 @@ export class Game {
 
 	#spawnPipe() {
 		const pipe = new Pipe(this, this.#maxObjectId++);
-		this.#objects.push(pipe);
+		this.objects.push(pipe);
 		return pipe;
 	}
-	
+
+	spawnObject(object:ICollidable) {
+		object.id = this.#maxObjectId++;
+		this.objects.push(object);
+		return object;
+	}
+
+	removeObject(object:ICollidable) {
+		if (!object) {
+			return;
+		}
+
+		const index = this.objects.indexOf(object);
+		if (index !== -1) {
+			this.objects.splice(index, 1);
+		}
+	}
+
 	/*#spawnFentInGap(spawnX: number, pipeY: number, pipeHeight: number) {
 		const offset = pipeHeight + defaultPipeGap;
 		const margin = 30;
@@ -106,12 +125,12 @@ export class Game {
 		}
 
 		// Tell floyds to update
-		for (const floyd of this.#floyds) {
+		for (const floyd of this.floyds) {
 			floyd.update(dt);
 		}
 
 		// Update objects
-		for (const object of this.#objects) {
+		for (const object of this.objects) {
 			object.update(dt);
 		}
 
@@ -120,14 +139,32 @@ export class Game {
 			action: "gameState",
 			data: {
 				state: this.#gameState,
-				players: this.#floyds.map(floyd => ({
-					id: floyd.id,
-					x: floyd.x,
-					y: floyd.y,
-					velocity: floyd.velocity,
-					hearts: floyd.hearts
-				})),
-				objects: this.#objects
+				players: this.#players.map(player => {
+					const floyd = player.data.floyd;
+					if (!floyd) {
+						// TODO: Handle this case
+						return
+					}
+
+					return {
+						id: player.data.id,
+						username: player.data.username,
+						floyd: {
+							x: floyd.x,
+							y: floyd.y,
+							width: floyd.width,
+							height: floyd.height,
+							velocity: floyd.velocity,
+							hearts: floyd.hearts	
+						}
+					}
+				}),
+				objects: this.objects.map(object => {
+					return {
+						type: object.constructor.name,
+						...object
+					}
+				})
 			}
 		}
 		const gameStatePacket = JSON.stringify(gameState);
@@ -265,8 +302,8 @@ export class Game {
 			const gameStart = {
 				action: "gameStart",
 				data: {
-					worldWidth: this.#worldWidth,
-					worldHeight: this.#worldHeight
+					worldWidth: this.worldWidth,
+					worldHeight: this.worldHeight
 				}
 			}
 			const gameStartPacket = JSON.stringify(gameStart);

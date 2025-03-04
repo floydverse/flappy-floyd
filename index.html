@@ -52,13 +52,13 @@
 		</section>
 
 		<!-- GAME CONTAINER -->
-		<div class="game-container">
+		<div id="gameContainer" class="game-container">
 			<canvas id="gameCanvas" width="360" height="640"></canvas>
 
 			<!-- Top Row => Pause & Mute + Highscore -->
 			<div class="top-row">
 				<div class="game-controls">
-					<button id="pauseBtn" title="Pause/Resume">❚❚</button>
+					<button id="pauseBtn" title="Pause/Resume" disabled>❚❚</button>
 					<button id="muteBtn" title="Mute/Unmute">🔊</button>
 				</div>
 				<div id="topHighscoreContainer">
@@ -88,9 +88,9 @@
 					<h3>All gamemodes:</h3>
 					<div class="button-grid">
 						<button type="button" class="grid-button" style="border: 2px solid green;">Classic</button>
-						<button type="button" class="grid-button">Battle royale</button>
-						<button type="button" class="grid-button">Race</button>
-						<button type="button" class="grid-button">Boss rush</button>
+						<button type="button" class="grid-button" disabled>Battle royale</button>
+						<button type="button" class="grid-button" disabled>Race</button>
+						<button type="button" class="grid-button" disabled>Boss rush</button>
 					</div>
 					<div>
 						<input type="text" placeholder="Enter party code">
@@ -101,13 +101,14 @@
 					<p>Matchmaking...</p>
 				</div>
 				<div id="lobbyPage" class="overlay-content">
-					<p>Lobby joined... Waiting for game to start...</p>
+					<p>Lobby joined. Waiting for game to start...</p>
 					<div style="border: 1px solid grey; padding: 10px; margin: 10px;">
-						<p>Players:</p>
+						<p id="lobbyPlayersLabel">Players:</p>
 						<ul id="lobbyPlayers">
 
 						</ul>
 					</div>
+					<p id="lobbyStartingMessage"></p>
 				</div>
 				<div id="gameOverPage" class="overlay-content">
 					<p id="gameOverText">Game Over!</p>

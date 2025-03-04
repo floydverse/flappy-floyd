@@ -19,13 +19,12 @@ export class Floyd implements ICollidable {
 	fentMultiplier: number
 	currentMultiplier: number
 
-	game: Game
-	ws: ServerWebSocket<PlayerData>
-
+	#game: Game
+	#ws: ServerWebSocket<PlayerData>
 
 	constructor(ws:ServerWebSocket<PlayerData>, game:Game, id:number) {
-		this.ws = ws
-		this.game = game
+		this.#ws = ws
+		this.#game = game
 		this.id = id
 		
 		this.x = 50;
@@ -43,13 +42,19 @@ export class Floyd implements ICollidable {
 	}
 
 	update(dt: number): void {
-		this.velocity.y += defaultGravity * dt
-		this.y += this.velocity.y * dt
-		this.x += defaultFloydSpeed
+		this.velocity.y += defaultGravity * dt;
+		this.y += this.velocity.y * dt;
+		this.x += defaultFloydSpeed * dt;
+
+		// Clamp Y position
+		if (this.y > this.#game.worldHeight) {
+			this.y = this.#game.worldHeight;
+			this.velocity.y = 0;
+		}		
 	}
 
 	jump() {
-		this.velocity.y += lift;
+		this.velocity.y = lift;
 	}
 
 	incrementScore() {

@@ -66,35 +66,40 @@ const serverOptions:TLSWebSocketServeOptions<PlayerData> = {
 			players.add(ws);
 
 			// Send player initial info
-			const packet = { action: "playerInfo", data: { playerId: newPlayerId, name: newPlayerName } };
+			const packet = { action: "playerInfo", data: { playerId: newPlayerId, username: newPlayerName } };
 			ws.send(JSON.stringify(packet));
 			logger.info(`Player ${newPlayerName} connected to server`);
 		},
-		async message(ws:ServerWebSocket<PlayerData>, data:string|Buffer) {
+		async message(ws: ServerWebSocket<PlayerData>, data: string | Buffer) {
 			if (typeof data !== "string") {
 				return;
 			}
-			const message:IMessage = JSON.parse(data);
-			
-			if (message.action == "joinGame") {
+		
+			const message: IMessage = JSON.parse(data);
+		
+			if (message.action == "joinSession") {
 				if (ws.data.session) {
 					// Player is already in a session
 					return;
 				}
-
+		
 				logger.info(`Player ${ws.data.username} requested to join game`);
-
-				// Try and find a session to join, otherwise create a new one
+		
+				// Try and find a session to join
+				let joined = false;
 				for (const session of sessions) {
 					if (session.tryAddPlayer(ws)) {
+						joined = true;
 						break;
 					}
 				}
-
-				// If no session was found, create a new one
-				const newSession = new Session();
-				sessions.add(newSession);
-				newSession.tryAddPlayer(ws);
+		
+				// If no session was found, create a new one and add the player
+				if (!joined) {
+					const newSession = new Session();
+					sessions.add(newSession);
+					newSession.tryAddPlayer(ws);
+				}
 			}
 			else {
 				// Pass it onto their current session

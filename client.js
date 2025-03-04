@@ -43,7 +43,7 @@ document.addEventListener("touchstart", () => {
 });
 
 function jump() {
-	const packet = { "action": "jump" };
+	const packet = { "action": "jump", data: {  } };
 	ws.send(JSON.stringify(packet));
 }
 
@@ -86,8 +86,12 @@ const floydAngleSpeed = 0.22;
 // Pipe
 const defaultPipeGap = 180;
 
-const gameState = {
-}
+// State from server
+let cameraX = 0;
+let cameraY = 0;
+let myPlayerId = null;
+let myUsername = null;
+let gameState = { state: "Pending", objects: [], players: [] };
 let floyds = [];
 
 function updateScoreUI(score, highScore) {
@@ -128,9 +132,8 @@ function updateHeartsUI(hearts) {
 	}
 }
 
-const bgWidth = 361, bgHeight = 640;
+const bgWidth = 361, bgHeight = 640, bgScrollSpeed = 64.0;
 let bgX1 = 0, bgX2 = bgWidth;
-let bgScrollSpeed = 64.0;
 function scrollBackground(dt) {
 	bgX1 -= bgScrollSpeed * dt;
 	bgX2 -= bgScrollSpeed * dt;
@@ -141,18 +144,17 @@ function scrollBackground(dt) {
 	if (dx2 <= -bgWidth) bgX2 = dx1 + bgWidth;
 }
 
-let groundScrollSpeed = 128.0;
-let groundX1 = 0, groundX2 = 360;
-let floorHeight = 56;
+const groundWidth = 360, groundScrollSpeed = 128.0, floorHeight = 56;
+let groundX1 = 0, groundX2 = groundWidth;
 function scrollGround(dt) {
 	groundX1 -= groundScrollSpeed * dt;
 	groundX2 -= groundScrollSpeed * dt;
 	let gx1 = Math.floor(groundX1), gx2 = Math.floor(groundX2);
 	let floorY = canvas.height - floorHeight;
-	ctx.drawImage(ground, gx1, floorY, 360, floorHeight);
-	ctx.drawImage(ground, gx2, floorY, 360, floorHeight);
-	if (gx1 <= -360) groundX1 = gx2 + 360;
-	if (gx2 <= -360) groundX2 = gx1 + 360;
+	ctx.drawImage(ground, gx1, floorY, groundWidth, floorHeight);
+	ctx.drawImage(ground, gx2, floorY, groundWidth, floorHeight);
+	if (gx1 <= -groundWidth) groundX1 = gx2 + groundWidth;
+	if (gx2 <= -groundWidth) groundX2 = gx1 + groundWidth;
 }
 
 let lastFrame = Date.now()
@@ -162,70 +164,108 @@ function mainLoop() {
 	let dt = (now - lastFrame) / 1000
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-	// Draw UI
-	updateScoreUI(state.score, state.highScore)
-	updateInGameScore(state.score, state.currentMultiplier)
-	updateHeartsUI(state.hearts)
-
-	// Draw background
-	scrollBackground(dt);
-
-	// Draw pipes
-	for (const pipe of state.pipes) {
-		let offset = pipe.height + defaultPipeGap;
-		let bottomY = pipe.y + offset;
-
-		ctx.drawImage(pipeTop, pipe.x, pipe.y, pipe.width, pipe.height);
-		ctx.drawImage(pipeBottom, pipe.x, bottomY, pipe.width, pipe.height);	
+	if (gameState.state !== "Started") {
+		// Draw background
+		scrollBackground(dt);
+		// Draw ground
+		scrollGround(dt);
 	}
-	
-	// Draw fent
-	for (const fent of state.bottles) {
-		ctx.drawImage(bottleImg, fent.x, fent.y, fent.width, fent.height);
-	}
-
-	// Draw ground
-	scrollGround(dt);
-
-	// Draw other floyds
-	for (const floyd of floyds) {
-		const info = floydInfos.get(floyd.id)
-
-		// Client side prediction / interoplation
-		if (!isNaN(floyd.velocity)) {
-			floyd.y += floyd.velocity * dt;
-		}
-
-		// Floyd angle
-		if (!isNaN(floyd.velocity)) {
-			const targetAngle = floyd.velocity * (Math.PI / 90) / floydAngleDamping;
-			info.floydAngle = clamp(lerp(info.floydAngle, targetAngle, floydAngleSpeed), -Math.PI / 2, Math.PI / 2);
-		}
-
-		// Draw floyd
+	else {
 		ctx.save();
-		ctx.translate(floyd.x + floyd.width / 2, floyd.y + floyd.height / 2);
-		ctx.rotate(info.floydAngle);
-		ctx.drawImage(flappyFloyd, -floyd.width / 2, -floyd.height / 2, floyd.width, floyd.height);
-		ctx.restore();
 
-		// Draw username
-		ctx.save()
-		ctx.textAlign = "center"
-		ctx.fillStyle = "yellow"
-		ctx.fillText(floyd.username, floyd.x, floyd.y);
-		ctx.restore()
+		// Handle updates for our own player
+		for (const player of state.players) {
+			const floyd = player.floyd;
+			if (floyd && player.id === myPlayerId) {
+				// Move camera to follow our player
+				cameraX = lerp(cameraX, floyd.x, 0.2);
+				cameraY = 0;
+
+				updateHeartsUI(floyd.hearts);
+				break;
+			}
+		}
+		ctx.translate(-cameraX, -cameraY);
+
+		// Draw UI
+		/*updateScoreUI(state.score, state.highScore);
+		updateInGameScore(state.score, state.currentMultiplier);
+		*/
+
+		// Draw pipes
+		/*for (const pipe of state.pipes) {
+			let offset = pipe.height + defaultPipeGap;
+			let bottomY = pipe.y + offset;
+
+			ctx.drawImage(pipeTop, pipe.x, pipe.y, pipe.width, pipe.height);
+			ctx.drawImage(pipeBottom, pipe.x, bottomY, pipe.width, pipe.height);	
+		}
+		
+		// Draw fent
+		for (const fent of state.bottles) {
+			ctx.drawImage(bottleImg, fent.x, fent.y, fent.width, fent.height);
+		}*/
+
+		
+		// Draw sky
+		{
+			const chunkI = Math.floor(cameraX / bgWidth);
+			const firstChunkX = chunkI * bgWidth;
+			const secondChunkX = (chunkI + 1) * bgWidth;	
+
+			ctx.drawImage(bgImg, firstChunkX, 0, bgWidth, bgHeight);
+			ctx.drawImage(bgImg, secondChunkX, 0, bgWidth, bgHeight);
+		}
+
+		// Draw ground
+		{
+			const chunkI = Math.floor(cameraX / groundWidth);
+			const firstChunkX = chunkI * groundWidth;
+			const secondChunkX = (chunkI + 1) * groundWidth;	
+			const floorY = canvas.height - floorHeight;
+
+			ctx.drawImage(ground, firstChunkX, floorY, 360, floorHeight);
+			ctx.drawImage(ground, secondChunkX, floorY, 360, floorHeight);
+		}
+
+		// Draw objects
+		for (const object of state.objects) {
+			if (object.type === "Pipe") {
+				ctx.drawImage(pipeTop, object.x, object.y, object.width, object.height);
+
+				ctx.drawImage(pipeBottom, object.x, object.y + object.height + object.gap, object.width, object.height);
+			}
+		}
+
+		// Draw floyds
+		for (const player of state.players) {
+			const floyd = player.floyd;
+			if (!floyd) {
+				continue;
+			}
+
+			// Draw floyd
+			ctx.save();
+			ctx.translate(floyd.x + floyd.width / 2, floyd.y + floyd.height / 2);
+			ctx.rotate(0);
+			ctx.drawImage(flappyFloyd, -floyd.width / 2, -floyd.height / 2, floyd.width, floyd.height);
+			ctx.restore();
+
+			// Draw username
+			ctx.save()
+			ctx.textAlign = "center"
+			ctx.fillStyle = "yellow"
+			ctx.fillText(player.username, floyd.x, floyd.y);
+			ctx.restore()			
+		}
+
+		ctx.restore();
 	}
-	
+
 	requestAnimationFrame(mainLoop);
 	lastFrame = now
 }
-
 requestAnimationFrame(mainLoop);
-
-function updateGameState(data) {
-	gameState = data;
-}
 
 function updateFloyds(data) {
 	floyds = data;
@@ -240,29 +280,58 @@ function updateFloyds(data) {
 	}
 }
 
-
 startBtn.addEventListener("click", () => {
-	const packet = { "action": "joinGame" };
+	const packet = { "action": "joinSession", data: {} };
 	ws.send(JSON.stringify(packet));
 	overlay.dataset.page = "loading";
 });
 
+function playerInfo(data) {
+	myPlayerId = data.playerId
+	myUsername = data.username
+}
+
 function sessionJoin(data) {
 	overlay.dataset.page = "lobby";
-	console.log(data)
+}
 
+let sessionStateInterval = -1;
+function sessionState(data) {
+	lobbyPlayersLabel.textContent = `Players (${data.players.length}/${data.capacity}):`;
 	lobbyPlayers.innerHTML = "";
 	for (const player of data.players) {
 		let li = document.createElement("li");
 		li.textContent = player.username;
 		lobbyPlayers.appendChild(li);
 	}
+
+	if (sessionStateInterval > 0) {
+		clearInterval(sessionStateInterval);
+	}
+	sessionStateInterval = setInterval(() => {
+		const now = Date.now();
+		const remaining = data.timeout - now;
+		if (remaining <= 0) {
+			clearInterval(sessionStateInterval);
+			return;
+		}
+		lobbyStartingMessage.textContent = data.players.length >= data.minimumPlayers
+			? `Game auto-starting in ${(Math.round(remaining / 100) / 10)} seconds`
+			: `Waiting for players...`;
+	}, 100);
 }
 
 function gameStart(data) {
 	overlay.dataset.page = "game";
+	gameContainer.style.width = data.worldWidth + "px";
+	gameContainer.style.height = data.worldHeight + "px";
 	canvas.width = data.worldWidth;
 	canvas.height = data.worldHeight;
+	bgMusic.play();
+}
+
+function updateGameState(data) {
+	gameState = data;
 }
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -283,22 +352,30 @@ ws.addEventListener("message", function(e) {
 		const packet = JSON.parse(e.data);
 		const data = packet.data;
 		switch (packet.action) {
+			case "playerInfo": {
+				playerInfo(data);
+				break;
+			}
 			case "sessionJoin": {
 				sessionJoin(data);
+				break
+			}
+			case "sessionState": {
+				sessionState(data);
 				break;
 			}
 			case "gameStart": {
 				gameStart(data);
 				break;
 			}
-			case "updateGameState": {
+			case "gameState": {
 				updateGameState(data);
 				break;
 			}
-			case "updateFloyds": {
+			/*case "updateFloyds": {
 				updateFloyds(data);
 				break;
-			}
+			}*/
 		}
 	}
 	catch(e) {

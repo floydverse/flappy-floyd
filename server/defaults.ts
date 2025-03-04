@@ -1,13 +1,13 @@
 // Default values for non constant variables
 export const defaultPipeWidth = 150
 export const defaultPipeHeight = 390;
-export const defaultFloydSpeed = 32;
-export const defaultPipeGap = 180;
+export const defaultFloydSpeed = 64;
+export const defaultPipeGap = 260;
 export const defaultHearts = 5;
 export const defaultGravity = 900;
 export const defaultBottleChance = 0.6;
 export const defaultKneeGrowth = 10;
-export const defaultSessionTimeoutS = 5;
+export const defaultSessionTimeoutS = 10;
 
 
 // Global constant variables (same for all players)

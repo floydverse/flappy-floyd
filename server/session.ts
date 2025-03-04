@@ -22,7 +22,7 @@ export class Session {
 		this.#game = null;
 		this.#createDate = Date.now();
 		this.#state = SessionState.Lobby;
-		this.#capacity = 8;
+		this.#capacity = 4;
 		this.#minimumPlayers = 1;
 	}
 
@@ -40,29 +40,42 @@ export class Session {
 		this.#game.start();
 	}
 
+	#broadcastSessionState() {
+		const now = Date.now();
+		const stateMessage = {
+			action: "sessionState",
+			data: {
+				players: this.#players.map(p => ({
+					id: p.data.id,
+					username: p.data.username
+				})),
+				capacity: this.#capacity,
+				minimumPlayers: this.#minimumPlayers,
+				createDate: this.#createDate,
+				timeout: now + 1000 * defaultSessionTimeoutS
+			}
+		};
+		const statePacket = JSON.stringify(stateMessage);
+		for (const player of this.#players) {
+			player.send(statePacket);
+		}
+	}
+
 	tryAddPlayer(ws:ServerWebSocket<PlayerData>):boolean {
 		if (this.#players.length >= this.#capacity || this.#state !== SessionState.Lobby) {
 			return false
 		}
 		
 		// Add player to session
-		logger.info(`Player ${ws.data.username} sucessfully joined session`);
-		
 		this.#players.push(ws);
 		ws.data.session = this;
-		for (const player of this.#players) {
-			// Tell player that a new player has joined
-			const message = {
-				action: "sessionJoin",
-				data: {
-					players: this.#players.map(p => {
-						return { username: p.data.username }
-					}),
-					capacity: this.#capacity
-				}
-			};
-			player.send(JSON.stringify(message));
-		}
+		logger.info(`Player ${ws.data.username} successfully joined session`);
+
+		const joinMessage = { action: "sessionJoin", data: { } };
+		ws.send(JSON.stringify(joinMessage));
+
+		// Broadcast new session state update
+		this.#broadcastSessionState();
 
 		// If we have enough players, start the game
 		if (this.#players.length === this.#capacity) {
