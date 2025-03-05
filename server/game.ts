@@ -1,9 +1,10 @@
 import type { ServerWebSocket } from "bun";
-import { defaultGravity, defaultFloydSpeed, difficultyInterval } from "./defaults"
+import { defaultGravity, defaultFloydSpeed, difficultyInterval, defaultBottleChance } from "./defaults"
 import { Floyd } from "./floyd"
 import { Pipe } from "./pipe"
 import type { Session } from "./session"
 import { logger, type PlayerData } from "./server";
+import { Bottle } from "./bottle";
 
 export interface ICollidable {
 	id:number;
@@ -11,6 +12,7 @@ export interface ICollidable {
 	y:number;
 	width:number;
 	height:number;
+	rotation:number;
 	velocity: { x:number, y:number };
 
 	update(dt:number): void;
@@ -30,20 +32,17 @@ export class Game {
 	worldWidth: number;
 	worldHeight: number;
 
-	// Map
+	// Game world
 	#players: ServerWebSocket<PlayerData>[];
-	floyds: Floyd[];
 	objects: ICollidable[];
-
-	#maxFloydId = 0
 	#maxObjectId = 0
+	floyds: Floyd[];
 
 	constructor(session:Session) {
 		this.#session = session;
 		this.worldHeight = 640;
 		this.worldWidth = 360;
 		this.#gameState = GameState.Pending;
-		this.#maxFloydId = 0;
 
 		this.#players = [];
 		this.objects = [];
@@ -52,7 +51,7 @@ export class Game {
 
 	addPlayer(ws: ServerWebSocket<PlayerData>) {
 		// Spawn in floyd for player
-		const floyd = new Floyd(ws, this, this.#maxFloydId++);
+		const floyd = new Floyd(this, this.#maxObjectId++, ws);
 		this.floyds.push(floyd);
 		ws.data.floyd = floyd;
 
@@ -70,13 +69,24 @@ export class Game {
 	}
 
 	#spawnPipe() {
+		// Find the rightmost existing pipe
+		const pipes = this.objects.filter(obj => obj instanceof Pipe);
+		const rightmostX = pipes.length > 0 
+			? Math.max(...pipes.map(pipe => pipe.x + pipe.width)) 
+			: this.worldWidth;
+
+		// Spawn new pipe to the right of the rightmost existing pipe
 		const pipe = new Pipe(this, this.#maxObjectId++);
-		this.objects.push(pipe);
-		return pipe;
+		pipe.x = rightmostX + this.worldWidth / 2;
+		this.spawnObject(pipe);
+
+		// Maybe spawn fent
+		if (Math.random() < defaultBottleChance) {
+			this.#spawnPipeBottle(pipe);
+		}
 	}
 
 	spawnObject(object:ICollidable) {
-		object.id = this.#maxObjectId++;
 		this.objects.push(object);
 		return object;
 	}
@@ -92,31 +102,20 @@ export class Game {
 		}
 	}
 
-	/*#spawnFentInGap(spawnX: number, pipeY: number, pipeHeight: number) {
-		const offset = pipeHeight + defaultPipeGap;
+	#spawnPipeBottle(pipe:Pipe) {
+		const offset = pipe.height + pipe.gap;
 		const margin = 30;
 		const fentHeight = 60;
-		let gapTop = pipeY + pipeHeight + margin;
-		let gapBottom = (pipeY + offset) - fentHeight - margin;
+		let gapTop = pipe.y + pipe.height + margin;
+		let gapBottom = (pipe.y + offset) - fentHeight - margin;
 	
 		if (gapBottom > gapTop) {
-			let fentY = Math.floor(Math.random() * (gapBottom - gapTop)) + gapTop;
-			const fentBottle = { x: spawnX, y: fentY, width: 60, height: fentHeight, velocity: { x: 0, y: 0 } };
-			this.bottles.push(fentBottle);
+			const fentX = pipe.x + pipe.width / 2;
+			const fentY = Math.floor(Math.random() * (gapBottom - gapTop)) + gapTop;
+			const bottle = new Bottle(this, this.#maxObjectId++, fentX, fentY, fentHeight);
+			this.spawnObject(bottle)
 		}
 	}
-		
-	#maybeSpawnBottle(pipeX: number, pipeY: number, pipeHeight: number) {
-		if (Math.random() < defaultBottleChance) {
-			this.#spawnFentInGap(pipeX, pipeY, pipeHeight);
-		}
-		let halfX = pipeX + (this.#worldWidth / 2);
-		if (halfX > this.#worldWidth) {
-			if (Math.random() < defaultBottleChance) {
-				this.#spawnFentInGap(halfX, pipeY, pipeHeight);
-			}
-		}
-	}*/
 
 	update(dt:number) {
 		if (this.#gameState != GameState.Started) {
@@ -124,7 +123,21 @@ export class Game {
 			return;
 		}
 
-		// Tell floyds to update
+		// Find the furthest forward Floyd
+		const furthestFloydX = this.floyds.length > 0 
+			? Math.max(...this.floyds.map(floyd => floyd.x))
+			: this.worldWidth;
+
+		// Check if we need to spawn a new pipe in front of the leading Floyd
+		const pipes = this.objects.filter(obj => obj instanceof Pipe);
+		const nextPipeX = pipes.length > 0 
+			? Math.min(...pipes.map(pipe => pipe.x)) 
+			: this.worldWidth;
+		if (nextPipeX < furthestFloydX) {
+			this.#spawnPipe();
+		}
+	
+		// Update floyds
 		for (const floyd of this.floyds) {
 			floyd.update(dt);
 		}
@@ -149,14 +162,8 @@ export class Game {
 					return {
 						id: player.data.id,
 						username: player.data.username,
-						floyd: {
-							x: floyd.x,
-							y: floyd.y,
-							width: floyd.width,
-							height: floyd.height,
-							velocity: floyd.velocity,
-							hearts: floyd.hearts	
-						}
+						highscore: player.data.highscore,
+						floyd: floyd
 					}
 				}),
 				objects: this.objects.map(object => {
@@ -171,124 +178,6 @@ export class Game {
 		for (const player of this.#players) {
 			player.send(gameStatePacket);
 		}
-
-		// Increase difficulty
-		/*const now = performance.now();
-		if (now >= this.#nextDifficultyTime) {
-			this.#pipeSpeed += speedIncrement + 5;
-			this.#nextDifficultyTime += difficultyInterval;
-		}
-
-		// Pipes
-		for (let i = 0; i < this.pipes.length; i++) {
-			const pipe = this.pipes[i];
-			let offset = pipe.height + defaultPipeGap;
-			let bottomY = pipe.y + offset;
-
-			pipe.x -= this.#pipeSpeed * dt + 4;
-			this.#kneeGrow(pipe, dt)
-			if (!pipe.markedForDespawn) {
-				let pipeRightEdge = pipe.x + pipe.width;
-
-				// Last pipe just came offscreen - make a new pipe and despawn this one
-				if (pipeRightEdge < (this.floyd.x + passOffset)) {
-					this.#incrementScore();
-					const newPipe = this.#spawnPipe();
-					this.#maybeSpawnBottle(newPipe.x, newPipe.y, newPipe.height);
-
-					pipe.markedForDespawn = true;
-					pipe.despawnTime = performance.now() + lingerTime;
-				}
-			}
-			else {
-				if (performance.now() > pipe.despawnTime) {
-					this.pipes.splice(i, 1);
-					i--;
-					continue;
-				}
-			}
-		
-			if (!pipe.markedForDespawn) {
-				const birdRect = {
-					x: this.floyd.x + 10, 
-					y: this.floyd.y + 10,
-					width: this.floyd.width - 20,
-					height: this.floyd.height - 20
-				};
-				const topRect = { 
-					x: pipe.x, 
-					y: pipe.y,
-					width: pipe.width,
-					height: pipe.height
-				};
-				const bottomRect = {
-					x: pipe.x,
-					y: bottomY,
-					width: pipe.width,
-					height: pipe.height
-				};
-				if (this.#isColliding(birdRect, topRect) || this.#isColliding(birdRect, bottomRect)) {
-					this.pipes.splice(i, 1);
-					i--;
-					this.#loseOneHeart();
-					this.#spawnPipe();
-					this.#maybeSpawnBottle(pipe.x, pipe.y, pipe.height);
-					break;
-				}
-			}
-		}
-
-		// Fent bottles
-		for (let b = 0; b < this.bottles.length; b++) {
-			const fent = this.bottles[b];
-			fent.x -= this.#pipeSpeed * dt + 5;
-
-			const birdRect = { x: this.floyd.x + 10, y: this.floyd.y + 10, width: this.floyd.width - 20, height: this.floyd.height - 20 };
-			const fentRect = { x: fent.x, y: fent.y, width: fent.width, height: fent.height };
-			if (this.#isColliding(birdRect, fentRect)) {
-				this.bottles.splice(b, 1);
-				b--;
-
-				this.#incrementScore();
-				this.#incrementFentStreak();
-
-				this.#bottleCount++;
-				if (this.#bottleCount >= bottlesNeededForHeart) {
-					this.#bottleCount = 0;
-					if (this.hearts < maxHearts) {
-						this.hearts++;
-					}
-				}
-
-				incrementGlobalFent();
-				continue;
-			}
-			if (fent.x + fent.width < 0) {
-				this.bottles.splice(b, 1);
-				b--;
-			}
-		}
-		
-		// Floyd
-		let birdBottom = this.floyd.y + this.floyd.height;
-		let floorY = canvasHeight - floorHeight;
-		// Floor bounce
-		if (birdBottom >= floorY) {
-			this.#loseOneHeart();
-			this.floyd.y = this.floyd.y - this.floyd.height - 1;
-			this.floyd.velocity = lift;
-		}
-		this.floyd.velocity += this.#gravity * dt;
-		this.floyd.y += this.floyd.velocity * dt;
-		if (this.floyd.y < 0) {
-			this.floyd.y = 0;
-			this.floyd.velocity = 0;
-		}
-		// This shouldn't happen
-		if (this.floyd.y > canvasHeight) {
-			this.floyd.y = canvasHeight - this.floyd.height;
-			this.floyd.velocity = 0;
-		}*/
 	}
 
 	// Actions - activated by client

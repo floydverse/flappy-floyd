@@ -4,6 +4,8 @@ const gameOverText = document.getElementById("gameOverText");
 const startBtn = document.getElementById("startBtn");
 const restartGameBtn = document.getElementById("restartGameBtn");
 const gameOverImage = document.getElementById("gameOverImage");
+const multiplierText = document.getElementById("multiplierText");
+const highScoreText = document.getElementById("highScoreText");
 const gameOverAudio = /** @type {HTMLAudioElement} */ (document.getElementById("gameOverAudio"));
 const hud = document.getElementById("hud");
 const heartsDisplay = document.createElement("div");
@@ -43,6 +45,7 @@ document.addEventListener("touchstart", () => {
 });
 
 function jump() {
+	invalidatePrediction();
 	const packet = { "action": "jump", data: {  } };
 	ws.send(JSON.stringify(packet));
 }
@@ -94,16 +97,32 @@ let myUsername = null;
 let gameState = { state: "Pending", objects: [], players: [] };
 let floyds = [];
 
+// Client side prediction
+let floydPredictedOffsetX = 0;
+let floydPredictedOffsetY = 0;
+
+function invalidatePrediction() {
+    floydPredictedOffsetX = 0;
+    floydPredictedOffsetY = 0;
+}
+
+function updatePrediction(floyd, dt) {
+    // Predict the new offset based on velocity
+    floydPredictedOffsetX += floyd.velocity.x * dt;
+    floydPredictedOffsetY += floyd.velocity.y * dt;
+}
+
+
 function updateScoreUI(score, highScore) {
-	scoreText.textContent = "Score: " + score;
-	highScoreText.textContent = "Highscore: " + highScore;
-	topHighscoreText.textContent = "Highscore: " + highScore;
+	scoreText.textContent = "Score: " + (score || 0);
+	highScoreText.textContent = "Highscore: " + (highScore || 0);
+	topHighscoreText.textContent = "Highscore: " + (highScore || 0);
 }
 
 function updateInGameScore(score, multiplier) {
-	inGameScore.textContent = score.toString();
+	inGameScore.textContent = (score || 0).toString();
 	if (multiplier > 1) {
-		let hue = (performance.now() / 10) % 360;
+		const hue = (performance.now() / 10) % 360;
 		inGameScore.style.color = `hsl(${hue},100%,50%)`;
 		multiplierText.style.display = "block";
 		multiplierText.textContent = "x" + multiplier;
@@ -117,7 +136,7 @@ function updateInGameScore(score, multiplier) {
 function showPlusOne(amount) {
 	let plusOne = document.createElement("div");
 	plusOne.className = "plusOne";
-	plusOne.textContent = amount;
+	plusOne.textContent = "+" + amount;
 	plusOneContainer.appendChild(plusOne);
 	setTimeout(() => plusOneContainer.removeChild(plusOne), 1000);
 }
@@ -144,7 +163,7 @@ function scrollBackground(dt) {
 	if (dx2 <= -bgWidth) bgX2 = dx1 + bgWidth;
 }
 
-const groundWidth = 360, groundScrollSpeed = 128.0, floorHeight = 56;
+const groundWidth = 360, groundScrollSpeed = 150, floorHeight = 56;
 let groundX1 = 0, groundX2 = groundWidth;
 function scrollGround(dt) {
 	groundX1 -= groundScrollSpeed * dt;
@@ -180,41 +199,45 @@ function mainLoop() {
 				// Move camera to follow our player
 				cameraX = lerp(cameraX, floyd.x, 0.2);
 				cameraY = 0;
-
+				
+				// Draw UI
 				updateHeartsUI(floyd.hearts);
+				updateInGameScore(floyd.score, floyd.currentMultiplier);
+				updateScoreUI(floyd.score, player.highScore);
 				break;
 			}
 		}
+		// Apply camera transform
 		ctx.translate(-cameraX, -cameraY);
-
-		// Draw UI
-		/*updateScoreUI(state.score, state.highScore);
-		updateInGameScore(state.score, state.currentMultiplier);
-		*/
-
-		// Draw pipes
-		/*for (const pipe of state.pipes) {
-			let offset = pipe.height + defaultPipeGap;
-			let bottomY = pipe.y + offset;
-
-			ctx.drawImage(pipeTop, pipe.x, pipe.y, pipe.width, pipe.height);
-			ctx.drawImage(pipeBottom, pipe.x, bottomY, pipe.width, pipe.height);	
-		}
-		
-		// Draw fent
-		for (const fent of state.bottles) {
-			ctx.drawImage(bottleImg, fent.x, fent.y, fent.width, fent.height);
-		}*/
-
 		
 		// Draw sky
 		{
+			const parallaxSpeed = 0.5;
+			const offsetX = cameraX * parallaxSpeed;
 			const chunkI = Math.floor(cameraX / bgWidth);
-			const firstChunkX = chunkI * bgWidth;
-			const secondChunkX = (chunkI + 1) * bgWidth;	
+			const beforeChunkX = (chunkI - 1) * bgWidth;
+			const chunkX = chunkI * bgWidth;
+			const afterChunkX = (chunkI + 1) * bgWidth;	
 
-			ctx.drawImage(bgImg, firstChunkX, 0, bgWidth, bgHeight);
-			ctx.drawImage(bgImg, secondChunkX, 0, bgWidth, bgHeight);
+			// Tends from stationary relative to camera to same speed as ground
+			ctx.drawImage(bgImg, beforeChunkX + (offsetX % bgWidth), 0, bgWidth, bgHeight);
+			ctx.drawImage(bgImg, chunkX + (offsetX % bgWidth), 0, bgWidth, bgHeight);
+			ctx.drawImage(bgImg, afterChunkX + (offsetX % bgWidth), 0, bgWidth, bgHeight);
+		}
+
+		// Draw objects
+		for (const object of state.objects) {
+			switch (object.type) {
+				case "Pipe": {
+					ctx.drawImage(pipeTop, object.x, object.y, object.width, object.height);
+					ctx.drawImage(pipeBottom, object.x, object.y + object.height + object.gap, object.width, object.height);	
+					break;
+				}
+				case "Bottle": {
+					ctx.drawImage(bottleImg, object.x, object.y, object.width, object.height);
+					break;
+				}
+			}
 		}
 
 		// Draw ground
@@ -228,15 +251,6 @@ function mainLoop() {
 			ctx.drawImage(ground, secondChunkX, floorY, 360, floorHeight);
 		}
 
-		// Draw objects
-		for (const object of state.objects) {
-			if (object.type === "Pipe") {
-				ctx.drawImage(pipeTop, object.x, object.y, object.width, object.height);
-
-				ctx.drawImage(pipeBottom, object.x, object.y + object.height + object.gap, object.width, object.height);
-			}
-		}
-
 		// Draw floyds
 		for (const player of state.players) {
 			const floyd = player.floyd;
@@ -244,18 +258,28 @@ function mainLoop() {
 				continue;
 			}
 
+			// Basic client-side prediction
+			let floydX = floyd.x, floydY = floyd.y;
+			if (player.id === myPlayerId) {
+				updatePrediction(floyd, dt);
+				floydX = floyd.x + floydPredictedOffsetX;
+				floydY = floyd.y + floydPredictedOffsetY;
+			}
+
 			// Draw floyd
 			ctx.save();
-			ctx.translate(floyd.x + floyd.width / 2, floyd.y + floyd.height / 2);
-			ctx.rotate(0);
+			ctx.translate(floydX + floyd.width / 2, floydY + floyd.height / 2);
+			ctx.rotate(floyd.rotation);
 			ctx.drawImage(flappyFloyd, -floyd.width / 2, -floyd.height / 2, floyd.width, floyd.height);
 			ctx.restore();
 
 			// Draw username
-			ctx.save()
-			ctx.textAlign = "center"
-			ctx.fillStyle = "yellow"
-			ctx.fillText(player.username, floyd.x, floyd.y);
+			ctx.save();
+			ctx.textAlign = "center";
+			ctx.fillStyle = "black";
+			ctx.fillText(player.username, floyd.x + floyd.width / 2 + 1, floyd.y + 1);
+			ctx.fillStyle = player.id === myPlayerId ? "yellow" : "white";
+			ctx.fillText(player.username, floyd.x + floyd.width / 2, floyd.y);
 			ctx.restore()			
 		}
 
@@ -332,6 +356,11 @@ function gameStart(data) {
 
 function updateGameState(data) {
 	gameState = data;
+	invalidatePrediction();
+}
+
+function scoreIncrement(data) {
+	showPlusOne(data.gained);
 }
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -372,10 +401,10 @@ ws.addEventListener("message", function(e) {
 				updateGameState(data);
 				break;
 			}
-			/*case "updateFloyds": {
-				updateFloyds(data);
+			case "scoreIncrement": {
+				scoreIncrement(data);
 				break;
-			}*/
+			}
 		}
 	}
 	catch(e) {

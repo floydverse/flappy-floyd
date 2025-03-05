@@ -27,11 +27,12 @@ export type PlayerData = {
 	session:Session|null
 	//user:User // TODO: Database users
 	username:string|null
+	highscore:number
 }
 
 // Main server global tick
 let lastTick = performance.now();
-const ticksPerSecond = 30;
+const ticksPerSecond = 20;
 const tickInterval = 1000 / ticksPerSecond;
 setInterval(() => {
 	let now = performance.now();
@@ -62,7 +63,7 @@ const serverOptions:TLSWebSocketServeOptions<PlayerData> = {
 			// Register player on game
 			const newPlayerId = playerId++;
 			const newPlayerName = "anon_" + newPlayerId;
-			ws.data = { id: newPlayerId, floyd: null, session:null, username: newPlayerName };
+			ws.data = { id: newPlayerId, floyd: null, session:null, username: newPlayerName, highscore: 0 };
 			players.add(ws);
 
 			// Send player initial info
