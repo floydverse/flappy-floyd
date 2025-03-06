@@ -5,6 +5,9 @@ const startBtn = document.getElementById("startBtn");
 const restartGameBtn = document.getElementById("restartGameBtn");
 const gameOverImage = document.getElementById("gameOverImage");
 const multiplierText = document.getElementById("multiplierText");
+const stats = document.getElementById("stats");
+const scoreText = document.getElementById("scoreText");
+const topHighscoreText = document.getElementById("topHighscoreText");
 const highScoreText = document.getElementById("highScoreText");
 const gameOverAudio = /** @type {HTMLAudioElement} */ (document.getElementById("gameOverAudio"));
 const hud = document.getElementById("hud");
@@ -28,6 +31,10 @@ document.addEventListener("keydown", (e) => {
 		jump();
 		e.preventDefault();
 	}
+	if (e.code == "F3") {
+		debug = !debug
+		e.preventDefault();
+	}
 	if (e.code === "Escape") {
 		if (gameState === "running") {
 			toggleGamePause();
@@ -45,9 +52,11 @@ document.addEventListener("touchstart", () => {
 });
 
 function jump() {
-	invalidatePrediction();
-	const packet = { "action": "jump", data: {  } };
-	ws.send(JSON.stringify(packet));
+	if (ws.readyState === WebSocket.OPEN) {
+		predictedFloyd.jump();
+		const packet = { "action": "jump", data: {  } };
+		ws.send(JSON.stringify(packet));	
+	}
 }
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -58,12 +67,14 @@ function lerp(from, to, weight) {
 	return from + weight * (to - from);
 }
 function clamp(value, min, max) {
-	return Math.min(max, Math.max(min, value));c
+	return Math.min(max, Math.max(min, value));
 }
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("gameCanvas"));
 const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 ctx.imageSmoothingEnabled = false;
+
+let debug = false;
 
 // BG music
 const bgMusic = new Audio("assets/flappyfloydonsolana.mp3");
@@ -98,23 +109,64 @@ let gameState = { state: "Pending", objects: [], players: [] };
 let floyds = [];
 
 // Client side prediction
-let floydPredictedOffsetX = 0;
-let floydPredictedOffsetY = 0;
+const defaultGravity = 900;
+const defaultFloydSpeed = 180;
+const defaultFloydLift = -420;
+const defaultFloydAngleSpeed = 0.22;
+const defaultFloydAngleMaxVelocity = 600;
+class Floyd {
+	constructor() {
+		this.x = 50;
+		this.y = 200;
+		this.rotation = 0;
+		this.velocity = { x: 0, y: 0 };
+	}
 
-function invalidatePrediction() {
-    floydPredictedOffsetX = 0;
-    floydPredictedOffsetY = 0;
+	// Update client-side prediction
+	update(dt) {
+		// Apply gravity to the predicted velocity (y-axis)
+		this.velocity.y += defaultGravity * dt;
+
+		// Update predicted position based on velocity
+		this.x += this.velocity.x * dt;
+		this.y += this.velocity.y * dt;
+
+		// Smooth rotation based on predicted vertical velocity
+		const targetAngle = (this.velocity.y / defaultFloydAngleMaxVelocity) * (Math.PI / 2); // ±90° range
+		this.rotation = clamp(lerp(this.rotation, targetAngle, defaultFloydAngleSpeed), -Math.PI / 2, Math.PI / 2);		
+	}
+
+	// Simulate a jump (client-side)
+	jump() {
+		this.velocity.y = defaultFloydLift;
+	}
+
+	// Correct the predicted position with the server's position data
+	correctPrediction(serverFloyd) {
+		// Correct position based on server's position
+		const positionErrorX = serverFloyd.x - this.x;
+		const positionErrorY = serverFloyd.y - this.y;
+		const rotationError = serverFloyd.rotation - this.rotation;
+
+		// Apply server position correction with damping
+		const correctionFactor = 0.3; 
+		this.x += positionErrorX * correctionFactor;
+		this.y += positionErrorY * correctionFactor;
+		this.rotation += rotationError * correctionFactor;
+
+		// Correct the predicted velocity based on server velocity
+		this.velocity.x = serverFloyd.velocity.x;
+		this.velocity.y = serverFloyd.velocity.y;
+	}
 }
+const predictedFloyd = new Floyd();
 
-function updatePrediction(floyd, dt) {
-    // Predict the new offset based on velocity
-    floydPredictedOffsetX += floyd.velocity.x * dt;
-    floydPredictedOffsetY += floyd.velocity.y * dt;
-}
-
-
-function updateScoreUI(score, highScore) {
+// Game UI
+function updateScoreUI(score) {
 	scoreText.textContent = "Score: " + (score || 0);
+}
+
+function updateHighScoreUI(highScore) {
 	highScoreText.textContent = "Highscore: " + (highScore || 0);
 	topHighscoreText.textContent = "Highscore: " + (highScore || 0);
 }
@@ -151,7 +203,7 @@ function updateHeartsUI(hearts) {
 	}
 }
 
-const bgWidth = 361, bgHeight = 640, bgScrollSpeed = 64.0;
+const bgWidth = 360, bgHeight = 640, bgScrollSpeed = 64.0;
 let bgX1 = 0, bgX2 = bgWidth;
 function scrollBackground(dt) {
 	bgX1 -= bgScrollSpeed * dt;
@@ -176,11 +228,11 @@ function scrollGround(dt) {
 	if (gx2 <= -groundWidth) groundX2 = gx1 + groundWidth;
 }
 
-let lastFrame = Date.now()
+let lastFrame = performance.now()
 function mainLoop() {
-	const now = Date.now()
+	const now = performance.now()
 	const state = gameState
-	let dt = (now - lastFrame) / 1000
+	const dt = (now - lastFrame) / 1000
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	if (gameState.state !== "Started") {
@@ -192,22 +244,18 @@ function mainLoop() {
 	else {
 		ctx.save();
 
-		// Handle updates for our own player
-		for (const player of state.players) {
-			const floyd = player.floyd;
-			if (floyd && player.id === myPlayerId) {
-				// Move camera to follow our player
-				cameraX = lerp(cameraX, floyd.x, 0.2);
-				cameraY = 0;
-				
-				// Draw UI
-				updateHeartsUI(floyd.hearts);
-				updateInGameScore(floyd.score, floyd.currentMultiplier);
-				updateScoreUI(floyd.score, player.highScore);
-				break;
-			}
+		// Debug stats
+		if (debug === true) {
+			stats.innerHTML = `<u>Debug stats:</u><p>FPS: ${Math.floor(1 / dt)}</p><p>Frame delta: ${dt.toPrecision(3)}</p><p>Server TPS: ${
+				ticksPerSecond.toPrecision(3)}</p><p>Player ID: ${myPlayerId}</p><p>Camera X: ${cameraX.toFixed(2)}</p><p>Camera Y: ${cameraY.toFixed(2)}</p>`;
 		}
+		else if (stats.textContent !== "") {
+			stats.textContent = "";
+		}
+
 		// Apply camera transform
+		cameraX = lerp(cameraX, predictedFloyd.x, 0.3);
+		cameraY = 0;
 		ctx.translate(-cameraX, -cameraY);
 		
 		// Draw sky
@@ -234,7 +282,15 @@ function mainLoop() {
 					break;
 				}
 				case "Bottle": {
-					ctx.drawImage(bottleImg, object.x, object.y, object.width, object.height);
+					ctx.save();
+					ctx.translate(object.x + object.width / 2, object.y + object.height/2);
+					ctx.rotate(object.rotation);
+					ctx.drawImage(bottleImg, -object.width/2, -object.height/2, object.width, object.height);
+					if (debug === true) {
+						ctx.fillStyle = "#00FF0080";
+						ctx.fillRect(-object.width / 2, -object.height / 2, object.width, object.height);	
+					}
+					ctx.restore();
 					break;
 				}
 			}
@@ -258,18 +314,37 @@ function mainLoop() {
 				continue;
 			}
 
-			// Basic client-side prediction
-			let floydX = floyd.x, floydY = floyd.y;
+			// Handle updates for our own player
+			let floydX = floyd.x, floydY = floyd.y, floydRotation = floyd.rotation;
 			if (player.id === myPlayerId) {
-				updatePrediction(floyd, dt);
-				floydX = floyd.x + floydPredictedOffsetX;
-				floydY = floyd.y + floydPredictedOffsetY;
+				// Client-side prediction
+				predictedFloyd.update(dt);
+				floydX = predictedFloyd.x;
+				floydY = predictedFloyd.y;
+				floydRotation = predictedFloyd.rotation;
+
+				// Draw UI
+				updateHeartsUI(floyd.hearts);
+				updateInGameScore(floyd.score, floyd.currentMultiplier);
+				
 			}
 
 			// Draw floyd
+			if (debug === true) {
+				ctx.save();
+				ctx.translate(floyd.x + floyd.width / 2, floyd.y + floyd.height / 2);
+				ctx.rotate(floyd.rotation);
+				ctx.fillStyle = "#FF000080";
+				ctx.fillRect(-floyd.width / 2, -floyd.height / 2, floyd.width, floyd.height);	
+				ctx.restore();
+			}
 			ctx.save();
 			ctx.translate(floydX + floyd.width / 2, floydY + floyd.height / 2);
-			ctx.rotate(floyd.rotation);
+			ctx.rotate(floydRotation);
+			if (debug === true) {
+				ctx.fillStyle = "#00FF0080";
+				ctx.fillRect(-floyd.width / 2, -floyd.height / 2, floyd.width, floyd.height);
+			}
 			ctx.drawImage(flappyFloyd, -floyd.width / 2, -floyd.height / 2, floyd.width, floyd.height);
 			ctx.restore();
 
@@ -277,9 +352,9 @@ function mainLoop() {
 			ctx.save();
 			ctx.textAlign = "center";
 			ctx.fillStyle = "black";
-			ctx.fillText(player.username, floyd.x + floyd.width / 2 + 1, floyd.y + 1);
+			ctx.fillText(player.username, floydX + floyd.width / 2 + 1, floydY + 1);
 			ctx.fillStyle = player.id === myPlayerId ? "yellow" : "white";
-			ctx.fillText(player.username, floyd.x + floyd.width / 2, floyd.y);
+			ctx.fillText(player.username, floydX + floyd.width / 2, floydY);
 			ctx.restore()			
 		}
 
@@ -310,7 +385,8 @@ startBtn.addEventListener("click", () => {
 	overlay.dataset.page = "loading";
 });
 
-function playerInfo(data) {
+function serverInfo(data) {
+	ticksPerSecond = data.ticksPerSecond
 	myPlayerId = data.playerId
 	myUsername = data.username
 }
@@ -356,11 +432,19 @@ function gameStart(data) {
 
 function updateGameState(data) {
 	gameState = data;
-	invalidatePrediction();
+	
+	for (const player of gameState.players) {
+		if (player.id == myPlayerId && player.floyd) {
+			serverFloyd = player.floyd;
+			predictedFloyd.correctPrediction(serverFloyd);
+		}
+	}
+
 }
 
 function scoreIncrement(data) {
 	showPlusOne(data.gained);
+	updateScoreUI(data.score);
 }
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -381,8 +465,8 @@ ws.addEventListener("message", function(e) {
 		const packet = JSON.parse(e.data);
 		const data = packet.data;
 		switch (packet.action) {
-			case "playerInfo": {
-				playerInfo(data);
+			case "serverInfo": {
+				serverInfo(data);
 				break;
 			}
 			case "sessionJoin": {

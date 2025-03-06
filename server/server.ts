@@ -67,7 +67,7 @@ const serverOptions:TLSWebSocketServeOptions<PlayerData> = {
 			players.add(ws);
 
 			// Send player initial info
-			const packet = { action: "playerInfo", data: { playerId: newPlayerId, username: newPlayerName } };
+			const packet = { action: "serverInfo", data: { playerId: newPlayerId, username: newPlayerName, ticksPerSecond: ticksPerSecond } };
 			ws.send(JSON.stringify(packet));
 			logger.info(`Player ${newPlayerName} connected to server`);
 		},

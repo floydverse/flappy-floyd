@@ -1,6 +1,6 @@
 import type { Game, ICollidable } from "./game";
 
-export class Bottle implements ICollidable {
+export class Bottle implements Object {
 	id: number;
 	x: number;
 	y: number;
@@ -8,19 +8,21 @@ export class Bottle implements ICollidable {
 	height: number;
 	rotation: number;
 	velocity: { x: number; y: number; };
+	solid: boolean;
 
 	#game: Game
 
 	constructor(game:Game, id:number, spawnX: number, fentY: number, fentHeight: number) {
-		this.#game = game
-		this.id = id
+		this.#game = game;
+		this.id = id;
 		
-		this.x = spawnX
-		this.y = fentY
-		this.width = 60
-		this.height = fentHeight
+		this.x = spawnX;
+		this.y = fentY;
+		this.width = 60;//60;
+		this.height = 200;//fentHeight;
 		this.rotation = 0;
-		this.velocity = { x: 0, y: 0 }
+		this.velocity = { x: 0, y: 0 };
+		this.solid = false;
 	}
 
 	update(dt: number): void {
@@ -32,5 +34,7 @@ export class Bottle implements ICollidable {
 				this.#game.removeObject(this);
 			}
 		}
+
+		this.rotation += 10 * dt;
 	}
 }

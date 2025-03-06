@@ -2,16 +2,17 @@ import type { ICollidable, Game } from "./game"
 import { defaultKneeGrowth, defaultPipeGap, defaultPipeHeight, defaultPipeWidth, pipePassOffset } from "./defaults"
 import type { Floyd } from "./floyd";
 
-export class Pipe implements ICollidable {
+export class Pipe implements Object {
 	id:number;
 	x: number;
 	y: number;
 	width: number;
 	height: number;
 	rotation: number;
+	velocity: { x: number; y: number; };
+	solid: boolean;
 
 	gap: number
-	velocity: { x: number; y: number; };
 
 	#game:Game
 	#passedFloyds:Set<Floyd>
@@ -30,6 +31,7 @@ export class Pipe implements ICollidable {
 		this.height = defaultPipeHeight;
 		this.rotation = 0;
 		this.velocity = { x: 0, y: 0 };
+		this.solid = false;
 
 		this.gap = defaultPipeGap;
 		this.#passedFloyds = new Set();
@@ -52,21 +54,19 @@ export class Pipe implements ICollidable {
 			// Skip floyds we've already passed
 			if (!this.#passedFloyds.has(floyd)) {
 				allFloydsPassed = false;
-		
+
 				// Check collision with top & bottom knee
 				const bottomPipeOffset = this.height + defaultPipeGap;
-				const bottomPipeY = this.y + bottomPipeOffset;		
-				if (
-					(this.x < floyd.x + floyd.width &&
-					this.x + this.width > floyd.x &&
-					this.y < floyd.y + floyd.height &&
-					this.y + this.height > floyd.y)	
-					||
-					(this.x < floyd.x + floyd.width &&
-					this.x + this.width > floyd.x &&
-					bottomPipeY < floyd.y + floyd.height &&
-					bottomPipeY + this.height > floyd.y	)
-				) {
+				const bottomPipeY = this.y + bottomPipeOffset;
+				const bottomKneeCollidable:ICollidable = {
+					x: this.x,
+					y: bottomPipeY,
+					width: this.width,
+					height: this.height,
+					rotation: 0
+				};
+
+				if (this.#game.isColliding(this, floyd) || this.#game.isColliding(bottomKneeCollidable, floyd)) {
 					floyd.loseOneHeart();
 					this.#game.removeObject(this);
 					return; // Exit early on collision

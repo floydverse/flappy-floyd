@@ -1,10 +1,10 @@
 import type { ServerWebSocket } from "bun"
 import { defaultGravity, defaultHearts, defaultFloydSpeed, defaultFloydLift, defaultFloydAngleSpeed, defaultFloydAngleMaxVelocity, floorHeight, bottlesNeededForHeart, maxHearts } from "./defaults"
-import type { Game, ICollidable } from "./game"
+import type { Game, GameObject } from "./game"
 import type { PlayerData } from "./server"
 import { clamp, lerp } from "./math";
 
-export class Floyd implements ICollidable {
+export class Floyd implements GameObject {
 	id: number;
 
 	x: number;
@@ -13,6 +13,7 @@ export class Floyd implements ICollidable {
 	height: number;
 	rotation: number;
 	velocity: { x:number, y:number };
+	solid: boolean;
 
 	score: number;
 	hearts: number;
@@ -35,7 +36,8 @@ export class Floyd implements ICollidable {
 		this.width = 100;
 		this.height = 75;
 		this.rotation = 0;
-		this.velocity = { x: 0, y: 0 };
+		this.velocity = { x: defaultFloydSpeed, y: 0 };
+		this.solid = false;
 
         this.score = 0;
         this.hearts = defaultHearts;
@@ -49,7 +51,7 @@ export class Floyd implements ICollidable {
 	update(dt: number): void {
 		this.velocity.y += defaultGravity * dt;
 		this.y += this.velocity.y * dt;
-		this.x += defaultFloydSpeed * dt;
+		this.x += this.velocity.x * dt;
 
 		// Clamp Y position
 		if (this.y > this.#game.worldHeight) {
@@ -74,12 +76,12 @@ export class Floyd implements ICollidable {
 		this.velocity.y = defaultFloydLift;
 	}
 
-	incrementScore(from:ICollidable|null=null) {
+	incrementScore(from:GameObject|null=null) {
 		let gained = 1 * this.currentMultiplier;
 		this.score += gained;
 
 		// Send score update to client
-		const scoreIncrement = { action:"scoreIncrement", data: { from: from?.id, gained: gained } };
+		const scoreIncrement = { action:"scoreIncrement", data: { from: from?.id, score: this.score, gained: gained } };
 		this.#ws.send(JSON.stringify(scoreIncrement));
 	}
 

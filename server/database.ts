@@ -1,3 +1,5 @@
+import type { GameState } from "./game"
+
 type User = {
 	id:number
 	username:string|null
@@ -60,5 +62,5 @@ type WalletTransaction = {
 	createdAt:number
 }
 
-export { GameMode, GameState, TransactionType }
+export { GameMode, TransactionType }
 export type { User, UserStats, Game, GameResult, WalletTransaction }
