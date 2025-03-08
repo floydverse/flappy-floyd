@@ -9,7 +9,7 @@ export const defaultPipeGap = 260;
 export const defaultHearts = 5;
 export const defaultGravity = 980;
 export const defaultBottleChance = 0.6;
-export const defaultKneeGrowth = 4;
+export const defaultKneeGrowth = 6;
 export const defaultSessionTimeoutS = 4;
 
 // Global constant variables (same for all players)

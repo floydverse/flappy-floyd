@@ -23,14 +23,14 @@ export class Narcan extends GameObject {
 		
 		this.x = 0;
 		this.y = 0;
-		const scaleFactor = 0.2;
+		const scaleFactor = 0.25;
 		this.width = 90 * scaleFactor;
 		this.height = 128 * scaleFactor;
 		this.rotation = 0;
 		this.velocity = { x: 0, y: 0 };
 		this.solid = false;
 
-		this.speed = 200;
+		this.speed = 100;
 		this.#time = 0;
 	}
 

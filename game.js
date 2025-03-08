@@ -1,7 +1,16 @@
-import { bgHeight, bgWidth, debug,groundWidth, ticksPerSecond, Player, player as myPlayer } from "./client.js";
+"use strict";
+import { bgHeight, bgWidth, debug,groundWidth, ticksPerSecond, Player, player as myPlayer, floorHeight, bgImg, ground, canvas } from "./client.js";
 import { Floyd, GameObject, gameObjects } from "./game-objects.js";
+import { lerp } from "./math.js";
 
 const stats = document.getElementById("stats");
+
+export const gameStates = {
+	Pending: "Pending",
+	Started: "Started",
+	Paused: "Paused",
+	Over: "Over"
+};
 
 export class Game {
 	/**@type {number}*/ cameraX;
@@ -31,7 +40,7 @@ export class Game {
 		this.clientFloyd = null;
 	}
 
-	draw(dt) {
+	draw(ctx, dt) {
 		ctx.save();
 
 		// Debug stats
@@ -65,7 +74,7 @@ export class Game {
 
 		// Draw objects
 		for (const object of this.objects) {
-			object.draw(ctx);
+			object.draw(ctx, dt);
 		}
 
 		// Draw ground
@@ -81,7 +90,7 @@ export class Game {
 
 		// Draw floyds
 		for (const floyd of this.floyds) {
-			floyd.draw(ctx);
+			floyd.draw(ctx, dt);
 		}
 
 		ctx.restore();
@@ -114,6 +123,16 @@ export class Game {
 		return null;
 	}
 
+	update(dt) {
+		for (const object of this.objects) {
+			object.update(dt);
+		}
+
+		for (const floyd of this.floyds) {
+			floyd.update(dt);
+		}
+	}
+
 	serverUpdate(serverGame) {
 		this.state = serverGame.state;
 
@@ -126,7 +145,7 @@ export class Game {
 					continue;
 				}
 				// If the client has not seen this object before, create it on the clientside
-				clientObject = gameObjects[serverObject.type](serverObject.id);
+				clientObject = new gameObjects[serverObject.type](serverObject.id);
 				this.objects.push(clientObject);
 			}
 
@@ -152,11 +171,11 @@ export class Game {
 					this.serverFloyd = serverFloyd;
 				}
 
-
 				let clientFloyd = this.getFloydById(serverFloyd.id);
 				// We know about this player, but don't know about their floyd - create it on our end
 				if (!clientFloyd) {
 					clientFloyd = new Floyd(serverFloyd.id);
+					clientFloyd.player = clientPlayer;
 					this.floyds.push(clientFloyd);
 
 					// If the new floyd we just learned about was for us, then we make it our client floyd
@@ -166,7 +185,23 @@ export class Game {
 				}
 
 				// Update clientside floyd with data from the server
-				clientFloyd.update(this.serverFloyd);
+				clientFloyd.serverUpdate(serverFloyd);
+			}
+		}
+
+		for (const playerId of serverGame.removedPlayerIds) {
+			for (let i = 0; i < this.players.length; i++) {
+				if (this.players[i].id === playerId) {
+					this.players.splice(i, 1);
+				}
+			}
+		}
+
+		for (const objectId of serverGame.removedObjectIds) {
+			for (let i = 0; i < this.objects.length; i++) {
+				if (this.objects[i].id === objectId) {
+					this.objects.splice(i, 1);
+				}
 			}
 		}
 	}

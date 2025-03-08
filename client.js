@@ -1,5 +1,6 @@
+"use strict";
 import { Floyd } from "./game-objects.js";
-import { Game } from "./game.js";
+import { Game, gameStates } from "./game.js";
 
 // UI
 const overlay = document.getElementById("overlay");
@@ -21,6 +22,10 @@ const gameOverText = document.getElementById("gameOverText");
 const restartGameBtn = document.getElementById("restartGameBtn");
 const gameOverImage = document.getElementById("gameOverImage");
 const gameOverAudio = /** @type {HTMLAudioElement} */ (document.getElementById("gameOverAudio"));
+const pauseBtn = document.getElementById("pauseBtn");
+const muteBtn = document.getElementById("muteBtn");
+const inGameScore = document.getElementById("inGameScore");
+const plusOneContainer = document.getElementById("plusOneContainer");
 
 /* --------------------------------------------------------------------------------------------------- */
 /* Actions sent to server                                                                              */
@@ -39,10 +44,10 @@ document.addEventListener("keydown", (e) => {
 		e.preventDefault();
 	}
 	if (e.code === "Escape") {
-		if (gameState === "running") {
-			toggleGamePause();
-		}
-		e.preventDefault();
+		//if (gameState === "running") {
+		//	toggleGamePause();
+		//}
+		//e.preventDefault();
 	}
 });
 document.addEventListener("mousedown", () => {
@@ -58,8 +63,7 @@ document.addEventListener("touchstart", () => {
 function jump() {
 	game.floyds
 	if (ws?.readyState === WebSocket.OPEN) {
-		game.clientFloyd.jump();
-		game.clientFloyd.image = flappyFloydFlapping;
+		game.clientFloyd?.jump();
 		const packet = { "action": "jump", data: {  } };
 		ws.send(JSON.stringify(packet));
 	}
@@ -81,20 +85,19 @@ startBtn.addEventListener("click", async () => {
 /* --------------------------------------------------------------------------------------------------- */
 /* Rendering & game state management                                                                   */
 /* --------------------------------------------------------------------------------------------------- */
-
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("gameCanvas"));
+export let debug = false;
+export const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("gameCanvas"));
 const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 ctx.imageSmoothingEnabled = false;
-export let debug = false;
 
 // BG music
 const bgMusic = new Audio("assets/flappyfloydonsolana.mp3");
 bgMusic.loop = true;
 
 // Graphics
-const bgImg = new Image();
+export const bgImg = new Image();
 bgImg.src = "assets/background.png";
-const ground = new Image();
+export const ground = new Image();
 ground.src = "assets/ground.png";
 const flappyFloyd = new Image();
 flappyFloyd.src = "assets/flappyfloyd.png";
@@ -173,12 +176,6 @@ function scrollGround(dt) {
 	if (gx2 <= -groundWidth) groundX2 = gx1 + groundWidth;
 }
 
-const gameStates = {
-	Pending: "Pending",
-	Started: "Started"
-}
-
-let gameState = gameStates.Pending;
 const game = new Game();
 
 let lastFrame = performance.now();
@@ -187,14 +184,15 @@ function mainLoop() {
 	const dt = (now - lastFrame) / 1000
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-	if (gameState !== gameStates.Started) {
+	if (game.state !== gameStates.Started) {
 		// Draw background
 		scrollBackground(dt);
 		// Draw ground
 		scrollGround(dt);
 	}
 	else {
-		game.draw();
+		game.update(dt);
+		game.draw(ctx, dt);
 	}
 
 	requestAnimationFrame(mainLoop);
@@ -270,7 +268,7 @@ export let packetHandlers = {
 		bgMusic.play();	
 	},
 	gameState(data) {
-		gameState = data;
+		game.serverUpdate(data);
 	},
 	scoreIncrement(data) {
 		showPlusOne(data.gained);

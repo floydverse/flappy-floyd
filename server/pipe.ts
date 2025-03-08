@@ -42,7 +42,7 @@ export class Pipe extends GameObject {
 	}
 
 	update(dt: number): void {
-		//this.#kneeGrow(dt);
+		this.#kneeGrow(dt);
 
 		let furthestBehindFloydX = Infinity;
 		

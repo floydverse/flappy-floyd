@@ -35,6 +35,8 @@ export class Game {
 	#policeSpawnChance: number;
 	furthestForwardFloyd: Floyd|null;
 	furthestBehindFloyd: Floyd|null;
+	removedPlayerIds: number[];
+	removedObjectIds: number[];
 
 	constructor(session:Session) {
 		this.#session = session;
@@ -52,6 +54,8 @@ export class Game {
 		this.#policeSpawnChance = 1.0;
 		this.furthestForwardFloyd = null;
 		this.furthestBehindFloyd = null;
+		this.removedPlayerIds = []
+		this.removedObjectIds = []
 	}
 
 	// Physics - reference:
@@ -179,6 +183,7 @@ export class Game {
 
 	removePlayer(ws:ServerWebSocket<PlayerData>) {
 		// TODO: Implement this
+		this.removedPlayerIds.push(ws.data.id);
 	}
 
 	#getRandomPipeY(pipeHeight:number, pipeGap:number) {
@@ -205,10 +210,9 @@ export class Game {
 	}
 
 	#spawnPolice() {
-		// TODO: Implement police class
 		const police = new Police(this, this.maxObjectId++)
 		police.x = ((this.#chunkI + 1) * this.worldWidth) + 400;
-		police.y = this.worldHeight - floorHeight;
+		police.y = this.worldHeight - floorHeight - police.height + 20;
 		this.spawnObject(police);
 	}
 
@@ -225,6 +229,7 @@ export class Game {
 		const index = this.objects.indexOf(object);
 		if (index !== -1) {
 			this.objects.splice(index, 1);
+			this.removedObjectIds.push(object.id);
 		}
 	}
 
@@ -315,9 +320,13 @@ export class Game {
 						type: object.constructor.name,
 						...object
 					}
-				})
+				}),
+				removedPlayerIds: this.removedPlayerIds,
+				removedObjectIds: this.removedObjectIds
 			}
 		}
+		this.removedPlayerIds = [];
+		this.removedObjectIds = [];
 		const gameStatePacket = JSON.stringify(gameState);
 		for (const player of this.#players) {
 			player.send(gameStatePacket);

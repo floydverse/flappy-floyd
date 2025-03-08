@@ -1,4 +1,5 @@
-import { debug, player as myPlayer, Player, updateHeartsUI } from "./client.js";
+"use strict";
+import { debug, player as myPlayer, Player, updateHeartsUI, updateInGameScore } from "./client.js";
 import { clamp, lerp } from "./math.js";
 
 export let gameObjects = { };
@@ -35,7 +36,7 @@ export class GameObject {
 	 * Render the object to the game screen 
 	 * @param {CanvasRenderingContext2D} ctx 
 	 */
-	draw(ctx) {
+	draw(ctx, dt) {
 		ctx.save();
 		ctx.translate(this.x + this.width / 2, this.y + this.height/2);
 		ctx.rotate(this.rotation);
@@ -77,8 +78,9 @@ const defaultFloydAngleMaxVelocity = 600;
 export class Floyd extends GameObject {
 	// Client properties
 	/**@type {string}*/static type = "Floyd";
-	/**@type {HTMLImageElement}*/image;
+	/**@type {HTMLImageElement}*/normalImage;
 	/**@type {HTMLImageElement}*/flappingImage;
+	/*@type {HTMLImageElement}*/currentImage;
 	/**@type {Player}*/ player;
 	
 	// Server properties
@@ -99,10 +101,11 @@ export class Floyd extends GameObject {
 
 		const image = new Image();
 		image.src = "assets/flappyfloyd.png";
-		this.image = image;
+		this.normalImage = image;
 		const flappingImage = new Image();
-		image.src = "assets/flappyfloydflapping.png";
+		flappingImage.src = "assets/flappyfloydflapping.png";
 		this.flappingImage = flappingImage;
+		this.currentImage = this.normalImage;
 		
 		this.username = "";
 		this.hearts = 5;
@@ -124,7 +127,7 @@ export class Floyd extends GameObject {
 	}
 
 	// Update client-side prediction
-	draw(ctx) {
+	draw(ctx, dt) {
 		// Draw floyd
 		if (debug === true) {
 			ctx.save();
@@ -135,22 +138,25 @@ export class Floyd extends GameObject {
 			ctx.restore();
 		}
 		ctx.save();
-		ctx.translate(floydX + this.width / 2, floydY + this.height / 2);
+		ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
 		ctx.rotate(this.rotation);
 		if (debug === true) {
 			ctx.fillStyle = "#00FF0080";
 			ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
 		}
-		ctx.drawImage(this.velocity.y > 0 ? this.image : this.flappingImage, -this.width / 2, -this.height / 2, this.width, this.height);
+		if (this.velocity.y > 0 || !this.currentImage) {
+			this.currentImage = this.normalImage;
+		}
+		ctx.drawImage(this.currentImage, -this.width / 2, -this.height / 2, this.width, this.height);
 		ctx.restore();		
 
 		// Draw username
 		ctx.save();
 		ctx.textAlign = "center";
 		ctx.fillStyle = "black";
-		ctx.fillText(this.username, floydX + this.width / 2 + 1, floydY + 1);
+		ctx.fillText(this.player.username, this.x + this.width / 2 + 1, this.y + 1);
 		ctx.fillStyle = this.player.id === myPlayer.id ? "yellow" : "white";
-		ctx.fillText(this.username, floydX + this.width / 2, floydY);
+		ctx.fillText(this.player.username, this.x + this.width / 2, this.y);
 		ctx.restore()
 
 		// Draw UI
@@ -163,10 +169,14 @@ export class Floyd extends GameObject {
 	// Simulate a jump (client-side)
 	jump() {
 		this.velocity.y = defaultFloydLift;
+		this.currentImage = this.flappingImage;
 	}
 
 	// Correct the predicted position with the server's position data
 	serverUpdate(serverFloyd) {
+		this.currentMultiplier = serverFloyd.currentMultiplier;
+		this.score = serverFloyd.score;
+		this.hearts = serverFloyd.hearts;
 		this.width = serverFloyd.width;
 		this.height = serverFloyd.height;
 
@@ -210,7 +220,7 @@ export class Pipe extends GameObject {
 		this.gap = 0;
 	}
 
-	draw(ctx) {
+	draw(ctx, dt) {
 		// Top pipe can be drawn with generic method
 		super.draw(ctx);
 
@@ -225,6 +235,11 @@ export class Pipe extends GameObject {
 		//@ts-ignore
 		ctx.drawImage(this.constructor.bottomImage, -this.width / 2, -this.height / 2 + this.height + this.gap, this.width, this.height);	
 		ctx.restore();
+	}
+
+	serverUpdate(serverPipe) {
+		super.serverUpdate(serverPipe);
+		this.gap = serverPipe.gap;
 	}
 }
 gameObjects.Pipe = Pipe;
@@ -260,3 +275,19 @@ export class Narcan extends GameObject {
 	}
 }
 gameObjects.Narcan = Narcan;
+
+export class Police extends GameObject {
+	/**@type {string}*/static type = "Police";
+	/**@type {HTMLImageElement}*/static image;
+
+	static {
+		const image = new Image();
+		image.src = "assets/police.png";
+		this.image = image;
+	}
+
+	constructor(id) {
+		super(id);
+	}
+}
+gameObjects.Police = Police;

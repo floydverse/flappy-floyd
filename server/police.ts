@@ -14,6 +14,7 @@ export class Police extends GameObject {
 	solid: boolean;
 
 	#game: Game
+	#lastNarcanSpawn
 
 	constructor(game:Game, id:number) {
 		super(id);
@@ -21,19 +22,19 @@ export class Police extends GameObject {
 		
 		this.x = 0;
 		this.y = 0;
-		this.width = 0;
-		this.height = 0;
+		const scaleFactor = 0.6;
+		this.width = 128 * scaleFactor;
+		this.height = 200 * scaleFactor;
 		this.velocity = { x: 0, y: 0 };
 		this.solid = false;	
+
+		this.#lastNarcanSpawn = 0;
 	}
 
 	#spawnNarcan(){
-
 		const narcan = new Narcan(this.#game, this.#game.maxObjectId++);
-		
 		narcan.x = this.x
 		narcan.y = this.y;
-
 		this.#game.spawnObject(narcan);
 	}
 
@@ -51,8 +52,9 @@ export class Police extends GameObject {
 				}
 			}
 		}
-		if (nearestFloyd != null) {
-			this.#spawnNarcan()
+		if (nearestFloyd != null && Date.now() - this.#lastNarcanSpawn > 3000) {
+			this.#spawnNarcan();
+			this.#lastNarcanSpawn = Date.now();
 		}
 		
 		if (this.#game.isOffscreen(this)) {
