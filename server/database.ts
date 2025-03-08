@@ -3,6 +3,7 @@ import type { GameState } from "./game"
 type User = {
 	id:number
 	username:string|null
+	email:string|null
 	walletAddress:number|null
 	createdAt:number
 }
@@ -22,7 +23,6 @@ type UserStats = {
 	totalFent:number
 	totalDistance:number
 }
-
 
 type Game = {
 	id:number

@@ -1,18 +1,18 @@
 import type { ServerWebSocket } from "bun"
 import { defaultGravity, defaultHearts, defaultFloydSpeed, defaultFloydLift, defaultFloydAngleSpeed, defaultFloydAngleMaxVelocity, floorHeight, bottlesNeededForHeart, maxHearts } from "./defaults"
-import type { Game, GameObject } from "./game"
+import type { Game } from "./game"
 import type { PlayerData } from "./server"
 import { clamp, lerp } from "./math";
+import { GameObject } from "./game-object";
+import { Vector2 } from "./math";
 
-export class Floyd implements GameObject {
-	id: number;
-
+export class Floyd extends GameObject {
 	x: number;
 	y: number;
 	width: number
 	height: number;
 	rotation: number;
-	velocity: { x:number, y:number };
+	velocity: Vector2;
 	solid: boolean;
 
 	score: number;
@@ -27,14 +27,15 @@ export class Floyd implements GameObject {
 	#ws: ServerWebSocket<PlayerData>;
 
 	constructor(game:Game, id:number, ws:ServerWebSocket<PlayerData>) {
+		super(id);
 		this.#game = game;
-		this.id = id;
 		this.#ws = ws;
 		
 		this.x = 50;
-		this.y = 200; 
-		this.width = 100;
-		this.height = 75;
+		this.y = 200;
+		const scaleFactor = 1.35;
+		this.width = 53 * scaleFactor;
+		this.height = 46 * scaleFactor;
 		this.rotation = 0;
 		this.velocity = { x: defaultFloydSpeed, y: 0 };
 		this.solid = false;
@@ -122,4 +123,3 @@ export class Floyd implements GameObject {
 		}
 	}
 }
-

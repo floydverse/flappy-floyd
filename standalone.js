@@ -307,7 +307,7 @@ function updateScoreUI() {
 	highScoreText.textContent = "Highscore: " + highScore;
 	topHighscoreText.textContent = "Highscore: " + highScore;
 }
-function updateInGameScore() {
+function updateInGameScore(score, currentMultiplier) {
 	inGameScore.textContent = score.toString();
 	if (currentMultiplier > 1) {
 		let hue = (performance.now() / 10) % 360;

@@ -1,39 +1,36 @@
-import type { ICollidable, Game } from "./game"
+import type { Game } from "./game"
 import { defaultKneeGrowth, defaultPipeGap, defaultPipeHeight, defaultPipeWidth, pipePassOffset } from "./defaults"
 import type { Floyd } from "./floyd";
+import { GameObject, type ICollidable } from "./game-object";
+import { Vector2 } from "./math";
 
-export class Pipe implements Object {
-	id:number;
+export class Pipe extends GameObject {
 	x: number;
 	y: number;
 	width: number;
 	height: number;
 	rotation: number;
-	velocity: { x: number; y: number; };
+	velocity: Vector2;
 	solid: boolean;
 
 	gap: number
 
 	#game:Game
 	#passedFloyds:Set<Floyd>
-	
-	#randomPipeY() {
-		return Math.floor(Math.random() * 231) - 240;
-	}
 
-	constructor(game:Game, id:number) {
+	constructor(game:Game, id:number, gap:number=defaultPipeGap) {
+		super(id);
 		this.#game = game;
-		this.id = id;
+		this.gap = gap;
 
-		this.x = 360;
-		this.y = this.#randomPipeY();
+		this.x = 0;
+		this.y = 0;
 		this.width = defaultPipeWidth;
 		this.height = defaultPipeHeight;
 		this.rotation = 0;
 		this.velocity = { x: 0, y: 0 };
 		this.solid = false;
 
-		this.gap = defaultPipeGap;
 		this.#passedFloyds = new Set();
 	}
 
@@ -48,13 +45,10 @@ export class Pipe implements Object {
 		//this.#kneeGrow(dt);
 
 		let furthestBehindFloydX = Infinity;
-		let allFloydsPassed = true;
 		
 		for (const floyd of this.#game.floyds) {
 			// Skip floyds we've already passed
 			if (!this.#passedFloyds.has(floyd)) {
-				allFloydsPassed = false;
-
 				// Check collision with top & bottom knee
 				const bottomPipeOffset = this.height + defaultPipeGap;
 				const bottomPipeY = this.y + bottomPipeOffset;
@@ -83,7 +77,7 @@ export class Pipe implements Object {
 		}
 		
 		// Remove the pipe if all floyds have passed and it's far enough behind
-		if (allFloydsPassed && this.x < furthestBehindFloydX - this.#game.worldWidth) {
+		if (this.#game.isOffscreen(this)) {
 			this.#game.removeObject(this);
 		}
 	}

@@ -1,32 +1,14 @@
 import type { ServerWebSocket } from "bun";
-import { defaultGravity, defaultFloydSpeed, difficultyInterval, defaultBottleChance } from "./defaults"
-import { Floyd } from "./floyd"
-import { Pipe } from "./pipe"
+import { defaultGravity, defaultFloydSpeed, difficultyInterval, defaultBottleChance, defaultPipeGap, defaultPipeWidth, floorHeight } from "./defaults"
+import { Floyd } from "./floyd";
+import { Pipe } from "./pipe";
+import { Bottle } from "./bottle";
 import type { Session } from "./session"
 import { logger, type PlayerData } from "./server";
-import { Bottle } from "./bottle";
-import { clampToZero, dot, normalise } from "./math";
-
-export interface ICollidable {
-	x:number;
-	y:number;
-	width:number;
-	height:number;
-	rotation:number;
-}
-
-export type GameObject = ICollidable & {
-	id:number;
-	velocity: { x:number, y:number };
-	solid: boolean;
-
-	update(dt:number): void;
-}
-
-export type Vector2 = {
-	x:number
-	y:number
-};
+import { clampToZero, Vector2 } from "./math";
+import type { GameObject, ICollidable } from "./game-object";
+import { Narcan } from "./narcan";
+import { Police } from "./police";
 
 export enum GameState {
 	Pending = "Pending",
@@ -45,8 +27,14 @@ export class Game {
 	// Game world
 	#players: ServerWebSocket<PlayerData>[];
 	objects: GameObject[];
-	#maxObjectId = 0
 	floyds: Floyd[];
+	maxObjectId: number;
+	#pipeSeparation: number;
+	#frontPipeX: number;
+	#chunkI: number;
+	#policeSpawnChance: number;
+	furthestForwardFloyd: Floyd|null;
+	furthestBehindFloyd: Floyd|null;
 
 	constructor(session:Session) {
 		this.#session = session;
@@ -57,6 +45,13 @@ export class Game {
 		this.#players = [];
 		this.objects = [];
 		this.floyds = [];
+		this.maxObjectId = 0;
+		this.#pipeSeparation = defaultPipeWidth * 2;
+		this.#frontPipeX = 0;
+		this.#chunkI = 0;
+		this.#policeSpawnChance = 1.0;
+		this.furthestForwardFloyd = null;
+		this.furthestBehindFloyd = null;
 	}
 
 	// Physics - reference:
@@ -71,7 +66,7 @@ export class Game {
 		];
 	}
 
-	getRotatedVerticies(r1:ICollidable) {
+	getRotatedVerticies(r1:ICollidable):Vector2[] {
 		const r1Verticies = this.getRectVerticies(r1);
 
 		let ox = r1.x + r1.width / 2;
@@ -99,7 +94,7 @@ export class Game {
 		return rotatedVerticies;
 	}
 
-	getEdges(verticies:Vector2[]) {
+	getEdges(verticies:Vector2[]):Vector2[] {
 		const edges = [];
 		for (let i = 0; i < verticies.length; i++) {
 			const vertex = verticies[i];
@@ -118,7 +113,7 @@ export class Game {
 
 		for (const edge of edges) {
 			const perpendicular = { x: edge.y, y: -edge.x };
-			normalise(perpendicular);
+			Vector2.normalise(perpendicular);
 			edgeNormals.add(perpendicular);
 		}
 
@@ -128,12 +123,12 @@ export class Game {
 	getMinMaxProjection(r1:ICollidable, axis:Vector2) {
 		const verticies = this.getRotatedVerticies(r1);
 		
-		let projection = dot(verticies[0], axis);
+		let projection = Vector2.dot(verticies[0], axis);
 
 		let max = projection;
 		let min = projection;
 		for (let i = 1; i < verticies.length; i++) {
-			projection = dot(verticies[i], axis);
+			projection = Vector2.dot(verticies[i], axis);
 			max = Math.max(projection, max);
 			min = Math.min(projection, min);
 		}
@@ -141,7 +136,7 @@ export class Game {
 		return { min, max }
 	}
 
-	isColliding(r1:ICollidable, r2:ICollidable) {
+	isColliding(r1:ICollidable, r2:ICollidable):boolean {
 		const r1Verticies = this.getRotatedVerticies(r1);
 		const r1Edges = this.getEdges(r1Verticies);
 		const r1Normals = this.getEdgeNormals(r1Edges);
@@ -174,7 +169,7 @@ export class Game {
 	// Players
 	addPlayer(ws: ServerWebSocket<PlayerData>) {
 		// Spawn in floyd for player
-		const floyd = new Floyd(this, this.#maxObjectId++, ws);
+		const floyd = new Floyd(this, this.maxObjectId++, ws);
 		this.floyds.push(floyd);
 		ws.data.floyd = floyd;
 
@@ -186,22 +181,35 @@ export class Game {
 		// TODO: Implement this
 	}
 
+	#getRandomPipeY(pipeHeight:number, pipeGap:number) {
+		const minY = -pipeHeight;
+		const maxY = this.worldHeight - pipeHeight - pipeGap;
+		return Math.floor(Math.random() * (maxY - minY + 1)) + minY;
+	}
+
 	#spawnPipe() {
-		// Find the rightmost existing pipe
-		const pipes = this.objects.filter(obj => obj instanceof Pipe);
-		const rightmostX = pipes.length > 0 
-			? Math.max(...pipes.map(pipe => pipe.x + pipe.width)) 
-			: this.worldWidth;
+		const pipeX = this.#frontPipeX + this.#pipeSeparation;
 
-		// Spawn new pipe to the right of the rightmost existing pipe
-		const pipe = new Pipe(this, this.#maxObjectId++);
-		pipe.x = rightmostX + this.worldWidth / 2;
+		// Create and position the new pipe
+		const pipe = new Pipe(this, this.maxObjectId++);
+		pipe.x = pipeX;
+		pipe.y = this.#getRandomPipeY(pipe.height, pipe.gap);
 		this.spawnObject(pipe);
-
-		// Maybe spawn fent
+	
+		this.#frontPipeX = pipeX;
+	
+		// Maybe spawn fent bottle`
 		if (Math.random() < defaultBottleChance) {
 			this.#spawnPipeBottle(pipe);
 		}
+	}
+
+	#spawnPolice() {
+		// TODO: Implement police class
+		const police = new Police(this, this.maxObjectId++)
+		police.x = ((this.#chunkI + 1) * this.worldWidth) + 400;
+		police.y = this.worldHeight - floorHeight;
+		this.spawnObject(police);
 	}
 
 	spawnObject(object:GameObject) {
@@ -230,9 +238,17 @@ export class Game {
 		if (gapBottom > gapTop) {
 			const fentX = pipe.x + pipe.width / 2;
 			const fentY = Math.floor(Math.random() * (gapBottom - gapTop)) + gapTop;
-			const bottle = new Bottle(this, this.#maxObjectId++, fentX, fentY, fentHeight);
+			const bottle = new Bottle(this, this.maxObjectId++, fentX, fentY, fentHeight);
 			this.spawnObject(bottle)
 		}
+	}
+
+	isOffscreen(object:GameObject):boolean {
+		if (object.x < (this.furthestBehindFloyd?.x || -Infinity) - this.worldWidth) {
+			return true;
+		}
+
+		return false;
 	}
 
 	update(dt:number) {
@@ -241,20 +257,30 @@ export class Game {
 			return;
 		}
 
-		// Find the furthest forward Floyd
-		const furthestFloydX = this.floyds.length > 0 
-			? Math.max(...this.floyds.map(floyd => floyd.x))
-			: this.worldWidth;
-
-		// Check if we need to spawn a new pipe in front of the leading Floyd
-		const pipes = this.objects.filter(obj => obj instanceof Pipe);
-		const nextPipeX = pipes.length > 0 
-			? Math.min(...pipes.map(pipe => pipe.x)) 
-			: this.worldWidth;
-		if (nextPipeX < furthestFloydX) {
-			this.#spawnPipe();
+		// Find furthest forward and behind floyds
+		for (const floyd of this.floyds) {
+			if (!this.furthestBehindFloyd || floyd.x < this.furthestBehindFloyd.x) {
+				this.furthestBehindFloyd = floyd;
+			}
+			if (!this.furthestForwardFloyd || floyd.x > this.furthestForwardFloyd.x) {
+				this.furthestForwardFloyd = floyd;
+			}
 		}
-	
+
+		// Pipe spawning & world generation
+		const furthestVisibleX = (this.furthestForwardFloyd?.x || 0) + this.worldWidth;
+		while (this.#frontPipeX < furthestVisibleX + this.#pipeSeparation) {
+			this.#spawnPipe();
+			this.#frontPipeX += this.#pipeSeparation;
+		}
+		const frontChunkI = Math.floor((this.furthestForwardFloyd?.x || 0) / this.worldWidth);
+		while (this.#chunkI < frontChunkI) {
+			if (Math.random() < this.#policeSpawnChance) {
+				this.#spawnPolice();
+			}
+			this.#chunkI = frontChunkI;
+		}
+
 		// Update floyds
 		for (const floyd of this.floyds) {
 			floyd.update(dt);
@@ -302,7 +328,6 @@ export class Game {
 	start() {
 		logger.info(`Game started`);
 		if (this.#gameState === GameState.Pending) {
-			this.#spawnPipe();
 			this.#gameState = GameState.Started
 			
 			// Tell players that the game has started
@@ -310,7 +335,7 @@ export class Game {
 				action: "gameStart",
 				data: {
 					worldWidth: this.worldWidth,
-					worldHeight: this.worldHeight
+					worldHeight: this.worldHeight,
 				}
 			}
 			const gameStartPacket = JSON.stringify(gameStart);

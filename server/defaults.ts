@@ -1,13 +1,13 @@
 // Default values for non constant variables
 export const defaultPipeWidth = 150
 export const defaultPipeHeight = 390;
-export const defaultFloydSpeed = 180;
-export const defaultFloydLift = -420;
+export const defaultFloydSpeed = 150;
+export const defaultFloydLift = -400;
 export const defaultFloydAngleSpeed = 0.22;
 export const defaultFloydAngleMaxVelocity = 600;
 export const defaultPipeGap = 260;
 export const defaultHearts = 5;
-export const defaultGravity = 900;
+export const defaultGravity = 980;
 export const defaultBottleChance = 0.6;
 export const defaultKneeGrowth = 4;
 export const defaultSessionTimeoutS = 4;

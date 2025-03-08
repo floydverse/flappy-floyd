@@ -1,5 +1,4 @@
 import type { ServerWebSocket, TLSWebSocketServeOptions } from 'bun';
-import { GameState } from './database';
 import type { Floyd } from './floyd';
 import { Session } from './session';
 
@@ -66,9 +65,13 @@ const serverOptions:TLSWebSocketServeOptions<PlayerData> = {
 			ws.data = { id: newPlayerId, floyd: null, session:null, username: newPlayerName, highscore: 0 };
 			players.add(ws);
 
+			// Send initial server info
+			const serverInfo = { action: "serverInfo", data: { ticksPerSecond: ticksPerSecond }};
+			ws.send(JSON.stringify(serverInfo));
+
 			// Send player initial info
-			const packet = { action: "serverInfo", data: { playerId: newPlayerId, username: newPlayerName, ticksPerSecond: ticksPerSecond } };
-			ws.send(JSON.stringify(packet));
+			const playerInfo = { action: "playerInfo", data: { playerId: newPlayerId, username: newPlayerName } };
+			ws.send(JSON.stringify(playerInfo));
 			logger.info(`Player ${newPlayerName} connected to server`);
 		},
 		async message(ws: ServerWebSocket<PlayerData>, data: string | Buffer) {
