@@ -323,6 +323,54 @@ hr {
 	display: none;
 }
 
+.credits-container {
+	position: absolute;
+	width: 100%;
+	max-width: 600px;
+	height: 100%;
+	overflow: hidden;
+}
+.credits {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	row-gap: 128px;
+	animation: scroll 60s linear infinite;
+}
+@keyframes scroll {
+	from {
+		transform: translateY(640px);
+	}
+	to {
+		transform: translateY(-100%);
+	}
+}
+.credits > p {
+	overflow: hidden;
+	border-right: .15em solid orange;
+	white-space: nowrap;
+	margin: 0 auto;
+	letter-spacing: .15em;
+	animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+}
+@keyframes typing {
+	from { width: 0 }
+	to { width: 100% }
+}
+@keyframes blink-caret {
+	from, to { border-color: transparent }
+	50% { border-color: orange; }
+}
+.credits-fade {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	background: linear-gradient(black, transparent 25%, transparent 75%, black);
+}
+
 #scoreText, #highScoreText {
 	margin: 5px 0;
 	font-size: 0.9rem;

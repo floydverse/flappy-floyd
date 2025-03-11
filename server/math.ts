@@ -46,6 +46,13 @@ export class Vector2 {
 		return angle;
 	}
 
+	static moveForward(v1:Vector2, angle:number, distance:number) {
+		return {
+			x: v1.x + Math.cos(angle) * distance,
+			y: v1.y + Math.sin(angle) * distance
+		}
+	}	
+
 	// https://github.com/Unity-Technologies/UnityCsReference/blob/master/Runtime/Export/Math/Vector2.cs
 	static moveTowards(current:Vector2, target:Vector2, maxDistanceDelta:number) {
 		const toVectorX = target.x - current.x;

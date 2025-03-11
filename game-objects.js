@@ -13,11 +13,11 @@ export class GameObject {
 	/** @type {{x:number, y:number}}*/velocity;
 
 	/**@type {string}*/static type = "GameObject";
-	/**@type {HTMLImageElement}*/static image;
+	/**@type {HTMLImageElement}*/static defaultImage;
 
 	static {
 		const image = new Image();
-		this.image = image;
+		this.defaultImage = image;
 	}
 
 	/**
@@ -30,22 +30,35 @@ export class GameObject {
 		this.width = 0;
 		this.height = 0;
 		this.velocity = { x: 0, y: 0 };
+		
+		// Additional state
+		this.image = /** @type {typeof GameObject}*/(this.constructor).defaultImage;
+		this.debugFillStyle = "#00FF0080";
+	}
+
+	drawDebug(ctx, dt) {
+		ctx.fillStyle = this.debugFillStyle;
+		ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);	
+	}
+
+	drawSprite(ctx, dt) {
+		// @ts-ignore
+		ctx.drawImage(this.image, -this.width/2, -this.height/2, this.width, this.height);
 	}
 
 	/**
 	 * Render the object to the game screen 
 	 * @param {CanvasRenderingContext2D} ctx 
+	 * @param {number} dt
 	 */
 	draw(ctx, dt) {
 		ctx.save();
 		ctx.translate(this.x + this.width / 2, this.y + this.height/2);
 		ctx.rotate(this.rotation);
 		if (debug === true) {
-			ctx.fillStyle = "#00FF0080";
-			ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);	
+			this.drawDebug(ctx, dt);
 		}
-		// @ts-ignore
-		ctx.drawImage(this.constructor.image, -this.width/2, -this.height/2, this.width, this.height);
+		this.drawSprite(ctx, dt);
 		ctx.restore();
 	}
 
@@ -78,9 +91,8 @@ const defaultFloydAngleMaxVelocity = 600;
 export class Floyd extends GameObject {
 	// Client properties
 	/**@type {string}*/static type = "Floyd";
-	/**@type {HTMLImageElement}*/normalImage;
-	/**@type {HTMLImageElement}*/flappingImage;
-	/*@type {HTMLImageElement}*/currentImage;
+	/**@type {HTMLImageElement}*/static defaultImage;
+	/**@type {HTMLImageElement}*/static flappingImage;
 	/**@type {Player}*/ player;
 	
 	// Server properties
@@ -88,6 +100,15 @@ export class Floyd extends GameObject {
 	/**@type {number}*/hearts;
 	/**@type {number}*/score;
 	/**@type {number}*/currentMultiplier;
+
+	static {
+		const image = new Image();
+		image.src = "assets/flappyfloyd.png";
+		this.defaultImage = image;
+		const flappingImage = new Image();
+		flappingImage.src = "assets/flappyfloydflapping.png";
+		this.flappingImage = flappingImage;
+	}
 
 	constructor(id) {
 		super(id);
@@ -98,15 +119,8 @@ export class Floyd extends GameObject {
 		this.height = 46 * scaleFactor;
 		this.rotation = 0;
 		this.velocity = { x: defaultFloydSpeed, y: 0 };
-
-		const image = new Image();
-		image.src = "assets/flappyfloyd.png";
-		this.normalImage = image;
-		const flappingImage = new Image();
-		flappingImage.src = "assets/flappyfloydflapping.png";
-		this.flappingImage = flappingImage;
-		this.currentImage = this.normalImage;
 		
+		// Server state
 		this.username = "";
 		this.hearts = 5;
 		this.score = 0;
@@ -129,26 +143,10 @@ export class Floyd extends GameObject {
 	// Update client-side prediction
 	draw(ctx, dt) {
 		// Draw floyd
-		if (debug === true) {
-			ctx.save();
-			ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-			ctx.rotate(this.rotation);
-			ctx.fillStyle = "#FF000080";
-			ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);	
-			ctx.restore();
+		if (this.velocity.y > 0) {
+			this.image = /**@type {typeof Floyd}*/(this.constructor).defaultImage;
 		}
-		ctx.save();
-		ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-		ctx.rotate(this.rotation);
-		if (debug === true) {
-			ctx.fillStyle = "#00FF0080";
-			ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-		}
-		if (this.velocity.y > 0 || !this.currentImage) {
-			this.currentImage = this.normalImage;
-		}
-		ctx.drawImage(this.currentImage, -this.width / 2, -this.height / 2, this.width, this.height);
-		ctx.restore();		
+		super.draw(ctx, dt);
 
 		// Draw username
 		ctx.save();
@@ -169,7 +167,7 @@ export class Floyd extends GameObject {
 	// Simulate a jump (client-side)
 	jump() {
 		this.velocity.y = defaultFloydLift;
-		this.currentImage = this.flappingImage;
+		this.image = /**@type {typeof Floyd}*/(this.constructor).flappingImage;
 	}
 
 	// Correct the predicted position with the server's position data
@@ -200,7 +198,7 @@ gameObjects.Floyd = Floyd;
 
 export class Pipe extends GameObject {
 	/**@type {string}*/static type = "Pipe";
-	/**@type {HTMLImageElement}*/static image;
+	/**@type {HTMLImageElement}*/static defaultImage;
 	/**@type {HTMLImageElement}*/static bottomImage;
 
 	/**@type {number}*/gap;
@@ -208,7 +206,7 @@ export class Pipe extends GameObject {
 	static {
 		const image = new Image();
 		image.src = "assets/pipetop.png";
-		this.image = image;
+		this.defaultImage = image;
 
 		const bottomImage = new Image();
 		bottomImage.src = "assets/pipebottom.png";
@@ -222,7 +220,7 @@ export class Pipe extends GameObject {
 
 	draw(ctx, dt) {
 		// Top pipe can be drawn with generic method
-		super.draw(ctx);
+		super.draw(ctx, dt);
 
 		// Custom logic to draw bottom pipe
 		ctx.save();
@@ -246,12 +244,11 @@ gameObjects.Pipe = Pipe;
 
 export class Bottle extends GameObject {
 	/**@type {string}*/static type = "Bottle";
-	/**@type {HTMLImageElement}*/static image;
 
 	static {
 		const image = new Image();
 		image.src = "assets/bottle.png";
-		this.image = image;
+		this.defaultImage = image;
 	}
 
 	constructor(id) {
@@ -262,32 +259,67 @@ gameObjects.Bottle = Bottle;
 
 export class Narcan extends GameObject {
 	/**@type {string}*/static type = "Narcan";
-	/**@type {HTMLImageElement}*/static image;
 
 	static {
 		const image = new Image();
 		image.src = "assets/narcan.png";
-		this.image = image;
+		this.defaultImage = image;
 	}
 
 	constructor(id) {
 		super(id);
+	}
+
+	drawSprite(ctx, dt) {
+		// Account for misaligned rotation of narcan texture
+		ctx.rotate(Math.PI / 2);
+		super.drawSprite(ctx, dt);
 	}
 }
 gameObjects.Narcan = Narcan;
 
 export class Police extends GameObject {
 	/**@type {string}*/static type = "Police";
-	/**@type {HTMLImageElement}*/static image;
+	/**@type {HTMLImageElement}*/static reloadingImage;
+	/**@type {HTMLImageElement}*/static shootingImage;
+	/**@type {"Searching"|"Reloading"|"Shooting"}*/state;
 
 	static {
 		const image = new Image();
 		image.src = "assets/police.png";
-		this.image = image;
+		this.defaultImage = image;
+
+		const reloadingImage = new Image();
+		reloadingImage.src = "assets/policereloading.png";
+		this.reloadingImage = reloadingImage;
+
+		const shootingImage = new Image();
+		shootingImage.src = "assets/policeshooting.png";
+		this.shootingImage = shootingImage;
 	}
 
 	constructor(id) {
 		super(id);
+	}
+
+	serverUpdate(serverPolice) {
+		super.serverUpdate(serverPolice);
+
+		this.state = serverPolice.state;
+		switch (this.state) {
+			case "Reloading": {
+				this.image = /** @type {typeof Police}*/(this.constructor).reloadingImage;
+				break;
+			}
+			case "Shooting": {
+				this.image = /** @type {typeof Police}*/(this.constructor).shootingImage;
+				break;
+			}
+			default: {
+				this.image = /** @type {typeof Police}*/(this.constructor).defaultImage;
+				break;
+			}
+		}
 	}
 }
 gameObjects.Police = Police;

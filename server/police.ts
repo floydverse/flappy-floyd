@@ -12,9 +12,14 @@ export class Police extends GameObject {
 	height: number;
 	velocity: Vector2;
 	solid: boolean;
+	
+	state:"Searching"|"Shooting"|"Reloading";
 
 	#game: Game
-	#lastNarcanSpawn
+	#lastNarcanSpawn:number;
+	#maxSearchRadius:number;
+	#reloadTimeMs:number;
+	#shotDelayMs:number;
 
 	constructor(game:Game, id:number) {
 		super(id);
@@ -28,35 +33,51 @@ export class Police extends GameObject {
 		this.velocity = { x: 0, y: 0 };
 		this.solid = false;	
 
+		this.state = "Searching"
 		this.#lastNarcanSpawn = 0;
+		this.#maxSearchRadius = 360;
+		this.#reloadTimeMs = 1500;
+		this.#shotDelayMs = 300;
 	}
 
-	#spawnNarcan(){
-		const narcan = new Narcan(this.#game, this.#game.maxObjectId++);
+	#spawnNarcan(angle:number):void {
+		const narcan = new Narcan(this.#game, this.#game.maxObjectId++, angle);
 		narcan.x = this.x
 		narcan.y = this.y;
 		this.#game.spawnObject(narcan);
 	}
 
 	update(): void {
-		// Handle floyd collision or locate nearest floyd
+		// Locate nearest floyd
 		let nearestFloyd:Floyd|null = null;
 		for (const floyd of this.#game.floyds) {
-			if (Vector2.distance(this, floyd)) {
-				if (!nearestFloyd || Vector2.distance(this, nearestFloyd) > Vector2.distance(this, floyd)) {
-					
-					nearestFloyd = floyd;
-					if (nearestFloyd.x > this.x) {
-						nearestFloyd == null
-					}
-				}
+			if (!nearestFloyd || Vector2.distance(this, nearestFloyd) > Vector2.distance(this, floyd)) {	
+				nearestFloyd = floyd;
 			}
 		}
-		if (nearestFloyd != null && Date.now() - this.#lastNarcanSpawn > 3000) {
-			this.#spawnNarcan();
-			this.#lastNarcanSpawn = Date.now();
+		if (nearestFloyd == null || Vector2.distance(this, nearestFloyd) > this.#maxSearchRadius) {
+			this.state = "Searching";
+			return;
 		}
-		
+		if (Date.now() - this.#lastNarcanSpawn < this.#reloadTimeMs) {
+			this.state = "Reloading";
+			return;
+		}
+
+		// Change state to shooting
+		this.state = "Shooting";
+		// Delay shot to give player time to react
+		setTimeout(() => {
+			if (this.state !== "Shooting") {
+				return; // Ensure it hasn't changed
+			}
+			const deltaX = nearestFloyd!.x - this.x;
+			const deltaY = nearestFloyd!.y - this.y;
+			let narcanAngle = Math.atan2(deltaY, deltaX);
+			this.#spawnNarcan(narcanAngle);
+			this.#lastNarcanSpawn = Date.now();
+		}, this.#shotDelayMs);
+
 		if (this.#game.isOffscreen(this)) {
 			this.#game.removeObject(this);
 		}

@@ -88,6 +88,14 @@ export class Game {
 			ctx.drawImage(ground, secondChunkX, floorY, 360, floorHeight);
 		}
 
+		// Draw debug
+		if (debug === true) {
+			const debugServerFloyd = new GameObject(0);
+			debugServerFloyd.debugFillStyle = "#FF000080";
+			debugServerFloyd.serverUpdate(this.serverFloyd);
+			debugServerFloyd.draw(ctx, dt);
+		}
+
 		// Draw floyds
 		for (const floyd of this.floyds) {
 			floyd.draw(ctx, dt);
