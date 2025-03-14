@@ -2,7 +2,7 @@
 import { debug, player as myPlayer, Player, updateHeartsUI, updateInGameScore } from "./client.js";
 import { clamp, lerp } from "./math.js";
 
-export let gameObjects = { };
+export let gameObjects = {};
 export class GameObject {
 	/**@type {number}*/id;
 	/**@type {number}*/x;
@@ -30,7 +30,7 @@ export class GameObject {
 		this.width = 0;
 		this.height = 0;
 		this.velocity = { x: 0, y: 0 };
-		
+
 		// Additional state
 		this.image = /** @type {typeof GameObject}*/(this.constructor).defaultImage;
 		this.debugFillStyle = "#00FF0080";
@@ -38,12 +38,12 @@ export class GameObject {
 
 	drawDebug(ctx, dt) {
 		ctx.fillStyle = this.debugFillStyle;
-		ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);	
+		ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
 	}
 
 	drawSprite(ctx, dt) {
 		// @ts-ignore
-		ctx.drawImage(this.image, -this.width/2, -this.height/2, this.width, this.height);
+		ctx.drawImage(this.image, -this.width / 2, -this.height / 2, this.width, this.height);
 	}
 
 	/**
@@ -53,7 +53,7 @@ export class GameObject {
 	 */
 	draw(ctx, dt) {
 		ctx.save();
-		ctx.translate(this.x + this.width / 2, this.y + this.height/2);
+		ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
 		ctx.rotate(this.rotation);
 		if (debug === true) {
 			this.drawDebug(ctx, dt);
@@ -94,7 +94,7 @@ export class Floyd extends GameObject {
 	/**@type {HTMLImageElement}*/static defaultImage;
 	/**@type {HTMLImageElement}*/static flappingImage;
 	/**@type {Player}*/ player;
-	
+
 	// Server properties
 	/**@type {string}*/username;
 	/**@type {number}*/hearts;
@@ -119,7 +119,7 @@ export class Floyd extends GameObject {
 		this.height = 46 * scaleFactor;
 		this.rotation = 0;
 		this.velocity = { x: defaultFloydSpeed, y: 0 };
-		
+
 		// Server state
 		this.username = "";
 		this.hearts = 5;
@@ -137,7 +137,7 @@ export class Floyd extends GameObject {
 
 		// Smooth rotation based on predicted vertical velocity
 		const targetAngle = (this.velocity.y / defaultFloydAngleMaxVelocity) * (Math.PI / 2); // ±90° range
-		this.rotation = clamp(lerp(this.rotation, targetAngle, defaultFloydAngleSpeed), -Math.PI / 2, Math.PI / 2);		
+		this.rotation = clamp(lerp(this.rotation, targetAngle, defaultFloydAngleSpeed), -Math.PI / 2, Math.PI / 2);
 	}
 
 	// Update client-side prediction
@@ -184,7 +184,7 @@ export class Floyd extends GameObject {
 		const rotationError = serverFloyd.rotation - this.rotation;
 
 		// Apply server position correction with damping
-		const correctionFactor = 0.3; 
+		const correctionFactor = 0.3;
 		this.x += positionErrorX * correctionFactor;
 		this.y += positionErrorY * correctionFactor;
 		this.rotation += rotationError * correctionFactor;
@@ -224,14 +224,14 @@ export class Pipe extends GameObject {
 
 		// Custom logic to draw bottom pipe
 		ctx.save();
-		ctx.translate(this.x + this.width / 2, this.y + this.height/2);
+		ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
 		ctx.rotate(this.rotation);
 		if (debug === true) {
 			ctx.fillStyle = "#00FF0080";
-			ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);	
+			ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
 		}
 		//@ts-ignore
-		ctx.drawImage(this.constructor.bottomImage, -this.width / 2, -this.height / 2 + this.height + this.gap, this.width, this.height);	
+		ctx.drawImage(this.constructor.bottomImage, -this.width / 2, -this.height / 2 + this.height + this.gap, this.width, this.height);
 		ctx.restore();
 	}
 

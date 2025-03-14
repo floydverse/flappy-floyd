@@ -88,7 +88,7 @@ export class Game {
 			ctx.drawImage(ground, secondChunkX, floorY, 360, floorHeight);
 		}
 
-		// Draw debug
+		// Draw debug server floyd
 		if (debug === true) {
 			const debugServerFloyd = new GameObject(0);
 			debugServerFloyd.debugFillStyle = "#FF000080";
