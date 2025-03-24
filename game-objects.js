@@ -97,7 +97,6 @@ export class Floyd extends GameObject {
 	/**@type {Player|null}*/ player;
 
 	// Server properties
-	/**@type {string}*/username;
 	/**@type {number}*/hearts;
 	/**@type {number}*/score;
 	/**@type {number}*/currentMultiplier;
@@ -124,7 +123,6 @@ export class Floyd extends GameObject {
 		this.player = null;
 
 		// Server state
-		this.username = "";
 		this.hearts = 5;
 		this.score = 0;
 		this.currentMultiplier = 1;

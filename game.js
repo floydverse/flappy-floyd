@@ -4,6 +4,7 @@ import { Floyd, GameObject, gameObjects } from "./game-objects.js";
 import { lerp } from "./math.js";
 
 const stats = document.getElementById("stats");
+const currentlySpectatingText = /**@type {HTMLElement}*/document.getElementById("currentlySpectatingText");
 
 /**
  * @readonly
@@ -33,6 +34,7 @@ export class Game {
 	// - Copy of floyds for the current player
 	/**@type {Floyd|null}*/ serverFloyd;
 	/**@type {Floyd|null}*/ clientFloyd;
+	/**@type {Floyd|null}*/ spectatingFloyd;
 
 	constructor() {
 		this.cameraX = 0;
@@ -45,6 +47,7 @@ export class Game {
 
 		this.serverFloyd = null;
 		this.clientFloyd = null;
+		this.spectatingFloyd = null;
 	}
 
 	/**
@@ -52,6 +55,14 @@ export class Game {
 	 */
 	addPlayer(player) {
 		this.players.push(player);
+	}
+
+	/**
+	 * @param {Floyd} floyd
+	 */
+	spectateFloyd(floyd) {
+		this.spectatingFloyd = floyd;
+		currentlySpectatingText.textContent = "Currently spectating: " + floyd.player.username;
 	}
 
 	/**
@@ -71,10 +82,17 @@ export class Game {
 		}
 
 		// Apply camera transform
-		this.cameraX = lerp(this.cameraX, this.clientFloyd?.x ?? 0, 0.3);
-		this.cameraY = 0;
+		const followingFloyd = this.clientFloyd ?? this.spectatingFloyd;
+		if (followingFloyd) {
+			this.cameraX = lerp(this.cameraX, followingFloyd.x, 0.3);
+			this.cameraY = 0;
+		}
+		else {
+			this.cameraX = 0;
+			this.cameraY = 0;
+		}
 		ctx.translate(-this.cameraX, -this.cameraY);
-		
+
 		// Draw sky
 		{
 			const parallaxSpeed = 0.5;

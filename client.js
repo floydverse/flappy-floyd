@@ -20,8 +20,10 @@ const muteBtn = /**@type {HTMLButtonElement}*/document.getElementById("muteBtn")
 const inGameScore = /**@type {HTMLElement}*/document.getElementById("inGameScore");
 const plusOneContainer = /**@type {HTMLElement}*/document.getElementById("plusOneContainer");
 const spectateContainer = /**@type {HTMLElement}*/document.getElementById("spectateContainer");
-const spectateBtn = /**@type {HTMLElement}*/document.getElementById("spectateBtn");
-const quitBtn = /**@type {HTMLElement}*/document.getElementById("quitBtn");
+const spectateBtn = /**@type {HTMLButtonElement}*/document.getElementById("spectateBtn");
+const spectatePrevBtn = /**@type {HTMLButtonElement}*/document.getElementById("spectatePrevBtn");
+const spectateNextBtn = /**@type {HTMLButtonElement}*/document.getElementById("spectateNextBtn");
+const quitBtn = /**@type {HTMLButtonElement}*/document.getElementById("quitBtn");
 const heartIcon = "assets/heart.png";
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -77,7 +79,10 @@ startBtn.addEventListener("click", async () => {
 	}
 });
 
-spectateBtn.addEventListener("click", async () => {
+spectateBtn.addEventListener("click", () => {
+	if (game.players.length <= 0) {
+		return;
+	}
 	// Inform server that we want to rejoin game & start receiving game updates again
 	const packet = { action: "joinGame", data: { spectate: true }};
 	ws.send(JSON.stringify(packet));
@@ -85,6 +90,21 @@ spectateBtn.addEventListener("click", async () => {
 	// Show spectate menu
 	spectateContainer.style.display = "flex";
 	overlay.style.display = "none";
+
+	// Spectate the first player
+	game.spectateFloyd(game.floyds[0]);
+});
+
+spectatePrevBtn.addEventListener("click", () => {
+	const playerIndex = game.floyds.indexOf(game.spectatingFloyd);
+	const prevFloyd = game.floyds[(playerIndex - 1 + game.floyds.length) % game.floyds.length];
+	game.spectateFloyd(prevFloyd);
+});
+
+spectateNextBtn.addEventListener("click", () => {
+	const playerIndex = game.floyds.indexOf(game.spectatingFloyd);
+	const nextFloyd = game.floyds[(playerIndex + 1) % game.floyds.length];
+	game.spectateFloyd(nextFloyd);
 });
 
 quitBtn.addEventListener("click", () => {
@@ -305,7 +325,7 @@ export let packetHandlers = {
 
 let ws = null;
 const maxRetries = 5;
-const serverAddress = localStorage.server || "wss://server.rplace.live/flappy-floyd";
+const serverAddress = localStorage.server || "wss://server.rplace.live/flappy-server";
 let retryCount = 0;
 
 function connectWebSocket() {
