@@ -350,11 +350,11 @@ bgMusic.loop = true;
 
 // overlay
 const overlay = document.getElementById("overlay");
-const gameOverText = document.getElementById("gameOverText");
+const gameQuitText = document.getElementById("gameQuitText");
 const startBtn = document.getElementById("startBtn");
 const restartGameBtn = document.getElementById("restartGameBtn");
-const gameOverImage = document.getElementById("gameOverImage");
-const gameOverAudio = /** @type {HTMLAudioElement} */ (document.getElementById("gameOverAudio"));
+const gameQuitImage = document.getElementById("gameQuitImage");
+const gameQuitAudio = /** @type {HTMLAudioElement} */ (document.getElementById("gameQuitAudio"));
 
 function initScoreboard() {
 	score = 0;
@@ -383,10 +383,10 @@ function resetGame() {
 	nextDifficultyTime = performance.now() + difficultyInterval;
 
 	overlay.style.display = "none";
-	gameOverImage.style.display = "none";
-	gameOverAudio.pause();
-	gameOverAudio.currentTime = 0;
-	gameOverText.style.display = "none";
+	gameQuitImage.style.display = "none";
+	gameQuitAudio.pause();
+	gameQuitAudio.currentTime = 0;
+	gameQuitText.style.display = "none";
 	restartGameBtn.style.display = "none";
 
 	bgX1 = 0; bgX2 = BG_WIDTH;
@@ -408,14 +408,14 @@ function startGame() {
 function gameOver() {
 	gameState = "over";
 	overlay.style.display = "flex";
-	gameOverText.style.display = "block";
-	gameOverImage.style.display = "block";
+	gameQuitText.style.display = "block";
+	gameQuitImage.style.display = "block";
 	restartGameBtn.style.display = "inline-block";
 
 	bgMusic.pause();
 	try {
-		gameOverAudio.currentTime = 0;
-		gameOverAudio.play();
+		gameQuitAudio.currentTime = 0;
+		gameQuitAudio.play();
 	} catch (e) {
 		console.warn("Audio blocked:", e);
 	}
@@ -630,10 +630,10 @@ startBtn.addEventListener("click", () => {
 // RESTART => re-play music
 restartGameBtn.addEventListener("click", () => {
 	overlay.style.display = "none";
-	gameOverImage.style.display = "none";
-	gameOverAudio.pause();
-	gameOverAudio.currentTime = 0;
-	gameOverText.style.display = "none";
+	gameQuitImage.style.display = "none";
+	gameQuitAudio.pause();
+	gameQuitAudio.currentTime = 0;
+	gameQuitText.style.display = "none";
 	restartGameBtn.style.display = "none";
 
 	gameState = "running";

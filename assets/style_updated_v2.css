@@ -288,7 +288,7 @@ body {
   margin: 5px 0;
   font-size: 0.9rem;
 }
-#gameOverText {
+#gameQuitText {
   margin: 10px 0;
   font-size: 1.2rem;
   display: none;

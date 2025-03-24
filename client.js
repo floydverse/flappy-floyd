@@ -14,7 +14,7 @@ const lobbyPlayersLabel = /**@type {HTMLElement}*/document.getElementById("lobby
 const lobbyPlayers = /**@type {HTMLElement}*/document.getElementById("lobbyPlayers");
 const gameContainer = /**@type {HTMLElement}*/document.getElementById("gameContainer");
 const lobbyStartingMessage = /**@type {HTMLElement}*/document.getElementById("lobbyStartingMessage");
-const gameOverAudio = /**@type {HTMLAudioElement}*/(document.getElementById("gameOverAudio"));
+const gameQuitAudio = /**@type {HTMLAudioElement}*/(document.getElementById("gameQuitAudio"));
 const pauseBtn = /**@type {HTMLButtonElement}*/(document.getElementById("pauseBtn"));
 const muteBtn = /**@type {HTMLButtonElement}*/document.getElementById("muteBtn");
 const inGameScore = /**@type {HTMLElement}*/document.getElementById("inGameScore");
@@ -24,6 +24,7 @@ const spectateBtn = /**@type {HTMLButtonElement}*/document.getElementById("spect
 const spectatePrevBtn = /**@type {HTMLButtonElement}*/document.getElementById("spectatePrevBtn");
 const spectateNextBtn = /**@type {HTMLButtonElement}*/document.getElementById("spectateNextBtn");
 const quitBtn = /**@type {HTMLButtonElement}*/document.getElementById("quitBtn");
+const gameQuitScoreText = /**@type {HTMLElement}*/document.getElementById("gameQuitScoreText");
 const heartIcon = "assets/heart.png";
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -267,8 +268,13 @@ export let packetHandlers = {
 		lobbyPlayersLabel.textContent = `Players (${data.players.length}/${data.capacity}):`;
 		lobbyPlayers.innerHTML = "";
 		for (const player of data.players) {
-			let li = document.createElement("li");
-			li.textContent = player.username;
+			const li = document.createElement("li");
+			const img = document.createElement("img");
+			img.src = "assets/flappyfloyd.png";
+			const p = document.createElement("p");
+			p.textContent = player.username;
+			li.appendChild(img);
+			li.appendChild(p);
 			lobbyPlayers.appendChild(li);
 		}
 	
@@ -305,13 +311,19 @@ export let packetHandlers = {
 	},
 	// Kicked from the game & will no longer receive game updates (no respawn)
 	gameQuit(data) {
-		overlay.dataset.page = "gameOver";
+		overlay.dataset.page = "gameQuit";
+		gameQuitScoreText.textContent = "Score: " + (data?.score || 0);
 		bgMusic.pause();
-		gameOverAudio.play();
+		gameQuitAudio.play();
 
 		if (player) {
 			game.removePlayer(player);
 		}
+	},
+	gameOver(data) {
+		this.gameQuit(null);
+		overlay.dataset.page = "lobby";
+		lobbyStartingMessage.textContent = "Game over! Next game starting soon...";
 	},
 	scoreIncrement(data) {
 		showPlusOne(data.gained);

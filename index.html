@@ -116,23 +116,22 @@
 				</div>
 				<div id="lobbyPage" class="overlay-content">
 					<p>Lobby joined. Waiting for game to start...</p>
-					<div style="border: 1px solid grey; padding: 10px; margin: 10px;">
+					<div class="lobby-players-container">
 						<p id="lobbyPlayersLabel">Players:</p>
-						<ul id="lobbyPlayers">
-
-						</ul>
+						<ul id="lobbyPlayers" class="lobby-players"></ul>
 					</div>
 					<p id="lobbyStartingMessage"></p>
 				</div>
-				<div id="gameOverPage" class="overlay-content">
-					<p id="gameOverText">Game Over!</p>
+				<div id="gameQuitPage" class="overlay-content">
+					<p id="gameQuitText">Game Over!</p>
+					<p id="gameQuitScoreText">Score: 0</p>
 					<!--<img
-						id="gameOverImage"
+						id="gameQuitImage"
 						src="assets/pixelated2.png"
 						alt="Game Over Pixelated"
 						style=" width:200px; height:200px; margin-bottom:10px;"
 					/>-->
-					<audio id="gameOverAudio" src="assets/gameover.wav"></audio>
+					<audio id="gameQuitAudio" src="assets/gameover.wav"></audio>
 					<div class="game-over-options">
 						<button type="button" id="spectateBtn" class="big-button">Spectate</button>
 						<button type="button" id="quitBtn" class="big-button">Quit</button>
