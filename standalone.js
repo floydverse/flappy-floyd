@@ -266,10 +266,7 @@ if (localStorage.getItem("offlineUserFent")) {
 }
 
 // hearts
-const hud = document.getElementById("hud");
-const heartsDisplay = document.createElement("div");
-heartsDisplay.id = "heartsDisplay";
-hud.appendChild(heartsDisplay);
+const heartsDisplay = document.getElementById("heartsDisplay");
 function updateHeartsDisplay() {
 	heartsDisplay.innerHTML = "";
 	for (let i = 0; i < hearts; i++) {

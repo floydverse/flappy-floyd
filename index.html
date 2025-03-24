@@ -8,7 +8,6 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body>
-
 	<!-- TOP: Socials -->
 	<div class="header-socials-top">
 		<div class="socials-container">
@@ -41,7 +40,7 @@
 		</div>
 	</header>
 
-	<div class="main-content">
+	<main class="main-content">
 
 		<!-- Contract Section -->
 		<section class="contract-section">
@@ -71,7 +70,18 @@
 			<div id="stats"></div>
 
 			<!-- HUD (Hearts pinned) -->
-			<div id="hud"></div>
+			<div id="hud">
+				<div id="heartsDisplay"></div>
+			</div>
+
+			<!--Spectate-->
+			<div id="spectateContainer" class="spectate-container" style="display: none;">
+				<p class="spectate-title">Currently spectating: Nobody</p>
+				<div class="spectate-button-container">
+					<button type="button" id="spectatePrevBtn" class="spectate-button big-button">&lt;</button>
+					<button type="button" id="spectateNextBtn" class="spectate-button big-button">&gt;</button>
+				</div>
+			</div>
 
 			<!-- In-game Score & multiplier -->
 			<div id="inGameScoreContainer">
@@ -116,14 +126,17 @@
 				</div>
 				<div id="gameOverPage" class="overlay-content">
 					<p id="gameOverText">Game Over!</p>
-					<img
+					<!--<img
 						id="gameOverImage"
 						src="assets/pixelated2.png"
 						alt="Game Over Pixelated"
 						style=" width:200px; height:200px; margin-bottom:10px;"
-					/>
+					/>-->
 					<audio id="gameOverAudio" src="assets/gameover.wav"></audio>
-					<button type="button" id="restartGameBtn" class="big-button">Restart</button>
+					<div class="game-over-options">
+						<button type="button" id="spectateBtn" class="big-button">Spectate</button>
+						<button type="button" id="quitBtn" class="big-button">Quit</button>
+					</div>
 				</div>
 			</div>
 
@@ -197,19 +210,19 @@
 		</section>
 
 		<!-- SHARE => typed name as key -->
-		<section class="leaderboard-section">
+		<!--<section class="leaderboard-section">
 			<h2>Global Leaderboard</h2>
 			<p>Submit your best score once!</p>
 			<div class="leaderboard-form">
 				<input type="text" id="playerName" placeholder="Your Name" />
 				<button id="shareScoreBtn">Share Highscore</button>
 			</div>
-			<!-- local scoreboard hidden -->
+			< !-- local scoreboard hidden -- >
 			<ul id="leaderboardList"></ul>
 
-			<!-- embedded scoreboard container -->
+			< !-- embedded scoreboard container -- >
 			<div id="embeddedLeaderboardContainer"></div>
-		</section>
+		</section>-->
 
 		<!-- Game Assets Section -->
 		<section class="assets-section">
@@ -217,9 +230,9 @@
 			<div class="assets-wrapper">
 				<!-- FlappyFloyd Card -->
 				<div class="asset-item">
-					<img src="assets/flappyfloyd.png" alt="FlappyFloyd" />
-					<h3>FlappyFloyd</h3>
-					<p style="font-size:0.8rem; line-height:1.2em;">
+					<img src="assets/flappyfloyd.png" alt="Flappy Floyd" />
+					<h3>Flappy Floyd</h3>
+					<p>
 						A special character you guide through the obstacles.
 					</p>
 				</div>
@@ -228,7 +241,7 @@
 				<div class="asset-item">
 					<img src="assets/bottle.png" alt="Fent" />
 					<h3>Fent</h3>
-					<p style="font-size:0.8rem; line-height:1.2em;">
+					<p>
 						Fent can give a multiplier to your score, and it can also restore hearts if
 						you collect enough. Floyd feeds on Fent.
 					</p>
@@ -236,12 +249,10 @@
 
 				<!-- Coming Soon Card -->
 				<div class="asset-item placeholder-item">
-					<div class="coming-soon-frame">
-						<span class="big-red-text">Coming Soon</span>
-					</div>
+					<img src="assets/mystery.png" alt="?" />
 					<h3>Coming Soon</h3>
-					<p style="font-size:0.8rem; line-height:1.2em;">
-						New maps, rewards for playing and more sounddesign!
+					<p>
+						New maps, gamemodes, rewards and sound design!
 					</p>
 				</div>
 			</div>
@@ -258,7 +269,7 @@
 		</section>
 
 		<!-- Fent Counters -->
-		<section class="fent-counter-section">
+		<!--<section class="fent-counter-section">
 			<h2>Fent Collected</h2>
 			<div class="fent-counters">
 				<div class="fent-user">
@@ -276,9 +287,8 @@
 					<span id="globalFentTotal">0</span>
 				</div>
 			</div>
-		</section>
-
-	</div> <!-- end .main-content -->
+		</section>-->
+	</main>
 
 	<footer class="footer">
 		<p>© 2024 FlappyFloyd. Powered by Solana.</p>
@@ -287,7 +297,6 @@
 	<!-- Firebase v8 (non-ESM) -->
 	<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
 	<script type="module" src="client.js" async defer></script>
 </body>
 </html>

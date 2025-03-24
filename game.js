@@ -5,12 +5,19 @@ import { lerp } from "./math.js";
 
 const stats = document.getElementById("stats");
 
-export const gameStates = {
+/**
+ * @readonly
+ * @enum {string}
+ */
+export const gameStates = Object.freeze({
 	Pending: "Pending",
 	Started: "Started",
 	Paused: "Paused",
 	Over: "Over"
-};
+});
+/**@typedef {keyof typeof gameStates} GameState*/
+
+/** @typedef {{ state: GameState; objects: any[]; players: any[]; removedPlayerIds: number[]; removedFloydIds: number[]; removedObjectIds: number[]; }} ServerGame*/
 
 export class Game {
 	/**@type {number}*/ cameraX;
@@ -40,6 +47,17 @@ export class Game {
 		this.clientFloyd = null;
 	}
 
+	/**
+	 * @param {Player} player 
+	 */
+	addPlayer(player) {
+		this.players.push(player);
+	}
+
+	/**
+	 * @param {CanvasRenderingContext2D} ctx
+	 * @param {number} dt
+	 */
 	draw(ctx, dt) {
 		ctx.save();
 
@@ -53,7 +71,7 @@ export class Game {
 		}
 
 		// Apply camera transform
-		this.cameraX = lerp(this.cameraX, this.clientFloyd.x, 0.3);
+		this.cameraX = lerp(this.cameraX, this.clientFloyd?.x ?? 0, 0.3);
 		this.cameraY = 0;
 		ctx.translate(-this.cameraX, -this.cameraY);
 		
@@ -89,7 +107,7 @@ export class Game {
 		}
 
 		// Draw debug server floyd
-		if (debug === true) {
+		if (debug === true && this.serverFloyd) {
 			const debugServerFloyd = new GameObject(0);
 			debugServerFloyd.debugFillStyle = "#FF000080";
 			debugServerFloyd.serverUpdate(this.serverFloyd);
@@ -104,6 +122,9 @@ export class Game {
 		ctx.restore();
 	}
 
+	/**
+	 * @param {number} id
+	 */
 	getObjectById(id) {
 		for (const object of this.objects) {
 			if (object.id == id) {
@@ -113,6 +134,9 @@ export class Game {
 		return null;
 	}
 
+	/**
+	 * @param {number} id
+	 */
 	getFloydById(id) {
 		for (const floyd of this.floyds) {
 			if (floyd.id == id) {
@@ -122,6 +146,9 @@ export class Game {
 		return null;
 	}
 
+	/**
+	 * @param {number} id
+	 */
 	getPlayerById(id) {
 		for (const player of this.players) {
 			if (player.id == id) {
@@ -131,7 +158,47 @@ export class Game {
 		return null;
 	}
 
-	update(dt) {
+
+	/**
+	 * @param {Floyd} floyd
+	 */
+	removeFloyd(floyd) {
+		// Remove this floyd from the game
+		const floydIdx = this.floyds.indexOf(floyd);
+		if (floydIdx !== -1) {
+			this.floyds.splice(floydIdx, 1);
+		}
+
+		// Kinda sus - remove all references to this floyd
+		const player = floyd.player;
+		if (player) {
+			player.floyd = null;
+		}
+
+		// Special case when we are the ones being removed from the game
+		if (floyd.player?.id === myPlayer?.id) {
+			this.serverFloyd = null;
+			this.clientFloyd = null;
+		}
+	}
+
+	/**
+	 * @param {Player} player
+	 */
+	removePlayer(player) {
+		// Remove this player from the game
+		const playerIdx = this.players.indexOf(player);
+		if (playerIdx != -1) {
+			this.players.splice(playerIdx, 1);
+		}
+
+		// Remove the floyd for this player
+		if (player.floyd) {
+			this.removeFloyd(player.floyd);
+		}
+	}
+
+	update(/**@type {number}*/dt) {
 		for (const object of this.objects) {
 			object.update(dt);
 		}
@@ -141,6 +208,9 @@ export class Game {
 		}
 	}
 
+	/**
+	 * @param {ServerGame} serverGame
+	 */
 	serverUpdate(serverGame) {
 		this.state = serverGame.state;
 
@@ -175,7 +245,7 @@ export class Game {
 				const serverFloyd = serverPlayer.floyd;
 
 				// If the serverFloyd was for us, then we make it our server floyd
-				if (serverPlayer.id == myPlayer.id && serverPlayer.floyd) {
+				if (serverPlayer.id == myPlayer?.id && serverPlayer.floyd) {
 					this.serverFloyd = serverFloyd;
 				}
 
@@ -183,11 +253,12 @@ export class Game {
 				// We know about this player, but don't know about their floyd - create it on our end
 				if (!clientFloyd) {
 					clientFloyd = new Floyd(serverFloyd.id);
+					clientPlayer.floyd = clientFloyd;
 					clientFloyd.player = clientPlayer;
 					this.floyds.push(clientFloyd);
 
 					// If the new floyd we just learned about was for us, then we make it our client floyd
-					if (serverPlayer.id == myPlayer.id && serverPlayer.floyd) {
+					if (serverPlayer.id == myPlayer?.id && serverPlayer.floyd) {
 						this.clientFloyd = clientFloyd;
 					}
 				}
@@ -197,14 +268,23 @@ export class Game {
 			}
 		}
 
-		for (const playerId of serverGame.removedPlayerIds) {
-			for (let i = 0; i < this.players.length; i++) {
-				if (this.players[i].id === playerId) {
-					this.players.splice(i, 1);
-				}
+		// Remove players that are no longer in the game
+		for (const removedPlayerId of serverGame.removedPlayerIds) {
+			const player = this.getPlayerById(removedPlayerId);
+			if (player) {
+				this.removePlayer(player);
 			}
 		}
 
+		// Remove floyds that have been despawned
+		for (const removedFloydId of serverGame.removedFloydIds) {
+			const floyd = this.getFloydById(removedFloydId);
+			if (floyd) {
+				this.removeFloyd(floyd);
+			}
+		}
+
+		// Remove objects that have been despawned
 		for (const objectId of serverGame.removedObjectIds) {
 			for (let i = 0; i < this.objects.length; i++) {
 				if (this.objects[i].id === objectId) {

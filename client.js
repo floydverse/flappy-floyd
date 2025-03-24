@@ -3,36 +3,33 @@ import { Floyd } from "./game-objects.js";
 import { Game, gameStates } from "./game.js";
 
 // UI
-const overlay = document.getElementById("overlay");
-const startBtn = document.getElementById("startBtn");
-const multiplierText = document.getElementById("multiplierText");
-const scoreText = document.getElementById("scoreText");
-const topHighscoreText = document.getElementById("topHighscoreText");
-const highScoreText = document.getElementById("highScoreText");
-const hud = document.getElementById("hud");
-const heartsDisplay = document.createElement("div");
-heartsDisplay.id = "heartsDisplay";
-hud.appendChild(heartsDisplay);
+const overlay = /**@type {HTMLElement}*/document.getElementById("overlay");
+const startBtn = /**@type {HTMLElement}*/document.getElementById("startBtn");
+const multiplierText = /**@type {HTMLElement}*/document.getElementById("multiplierText");
+const scoreText = /**@type {HTMLElement}*/document.getElementById("scoreText");
+const topHighscoreText = /**@type {HTMLElement}*/document.getElementById("topHighscoreText");
+const highScoreText = /**@type {HTMLElement}*/document.getElementById("highScoreText");
+const heartsDisplay = /**@type {HTMLElement}*/document.getElementById("heartsDisplay");
+const lobbyPlayersLabel = /**@type {HTMLElement}*/document.getElementById("lobbyPlayersLabel");
+const lobbyPlayers = /**@type {HTMLElement}*/document.getElementById("lobbyPlayers");
+const gameContainer = /**@type {HTMLElement}*/document.getElementById("gameContainer");
+const lobbyStartingMessage = /**@type {HTMLElement}*/document.getElementById("lobbyStartingMessage");
+const gameOverAudio = /**@type {HTMLAudioElement}*/(document.getElementById("gameOverAudio"));
+const pauseBtn = /**@type {HTMLButtonElement}*/(document.getElementById("pauseBtn"));
+const muteBtn = /**@type {HTMLButtonElement}*/document.getElementById("muteBtn");
+const inGameScore = /**@type {HTMLElement}*/document.getElementById("inGameScore");
+const plusOneContainer = /**@type {HTMLElement}*/document.getElementById("plusOneContainer");
+const spectateContainer = /**@type {HTMLElement}*/document.getElementById("spectateContainer");
+const spectateBtn = /**@type {HTMLElement}*/document.getElementById("spectateBtn");
+const quitBtn = /**@type {HTMLElement}*/document.getElementById("quitBtn");
 const heartIcon = "assets/heart.png";
-const lobbyPlayersLabel = document.getElementById("lobbyPlayersLabel");
-const lobbyPlayers = document.getElementById("lobbyPlayers");
-const gameContainer = document.getElementById("gameContainer");
-const lobbyStartingMessage = document.getElementById("lobbyStartingMessage");
-const gameOverText = document.getElementById("gameOverText");
-const restartGameBtn = document.getElementById("restartGameBtn");
-const gameOverImage = document.getElementById("gameOverImage");
-const gameOverAudio = /** @type {HTMLAudioElement} */ (document.getElementById("gameOverAudio"));
-const pauseBtn = document.getElementById("pauseBtn");
-const muteBtn = document.getElementById("muteBtn");
-const inGameScore = document.getElementById("inGameScore");
-const plusOneContainer = document.getElementById("plusOneContainer");
 
 /* --------------------------------------------------------------------------------------------------- */
 /* Actions sent to server                                                                              */
 /* --------------------------------------------------------------------------------------------------- */
 
 document.addEventListener("keydown", (e) => {
-	if ("value" in document.activeElement) {
+	if (document.activeElement && "value" in document.activeElement) {
 		return;
 	}
 	if (["Space", "ArrowUp", "KeyW"].includes(e.code)) {
@@ -61,7 +58,6 @@ document.addEventListener("touchstart", () => {
 
 
 function jump() {
-	game.floyds
 	if (ws?.readyState === WebSocket.OPEN) {
 		game.clientFloyd?.jump();
 		const packet = { "action": "jump", data: {  } };
@@ -81,6 +77,19 @@ startBtn.addEventListener("click", async () => {
 	}
 });
 
+spectateBtn.addEventListener("click", async () => {
+	// Inform server that we want to rejoin game & start receiving game updates again
+	const packet = { action: "joinGame", data: { spectate: true }};
+	ws.send(JSON.stringify(packet));
+
+	// Show spectate menu
+	spectateContainer.style.display = "flex";
+	overlay.style.display = "none";
+});
+
+quitBtn.addEventListener("click", () => {
+	location.reload();
+});
 
 /* --------------------------------------------------------------------------------------------------- */
 /* Rendering & game state management                                                                   */
@@ -205,12 +214,12 @@ requestAnimationFrame(mainLoop);
 /* Packet handling                                                                                     */
 /* --------------------------------------------------------------------------------------------------- */
 export class Player {
-	/**@type {string}*/id;
+	/**@type {number}*/id;
 	/**@type {string}*/username;
 	/**@type {Floyd|null}*/floyd;
 
 	/**
-	 * @param {string} id
+	 * @param {number} id
 	 * @param {string} username
 	 */
 	constructor(id, username) {
@@ -219,7 +228,7 @@ export class Player {
 		this.floyd = null;
 	}
 }
-export let player = null;
+/**@type {Player|null}*/export let player = null;
 export let ticksPerSecond = 0;
 
 // @ts-ignore
@@ -265,10 +274,24 @@ export let packetHandlers = {
 		gameContainer.style.height = data.worldHeight + "px";
 		canvas.width = data.worldWidth;
 		canvas.height = data.worldHeight;
-		bgMusic.play();	
+		bgMusic.play();
+
+		if (player) {
+			game.addPlayer(player);
+		}
 	},
 	gameState(data) {
 		game.serverUpdate(data);
+	},
+	// Kicked from the game & will no longer receive game updates (no respawn)
+	gameQuit(data) {
+		overlay.dataset.page = "gameOver";
+		bgMusic.pause();
+		gameOverAudio.play();
+
+		if (player) {
+			game.removePlayer(player);
+		}
 	},
 	scoreIncrement(data) {
 		showPlusOne(data.gained);
@@ -282,6 +305,7 @@ export let packetHandlers = {
 
 let ws = null;
 const maxRetries = 5;
+const serverAddress = localStorage.server || "wss://server.rplace.live/flappy-floyd";
 let retryCount = 0;
 
 function connectWebSocket() {
@@ -290,7 +314,7 @@ function connectWebSocket() {
 			return resolve(ws);
 		}
 
-		ws = new WebSocket("ws://localhost:3000");
+		ws = new WebSocket(serverAddress);
 
 		ws.addEventListener("open", () => {
 			console.log("Connected to WebSocket");

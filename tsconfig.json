@@ -11,6 +11,8 @@
 		"noImplicitAny": false,
 		"strictNullChecks": false,
 		"noImplicitThis": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 		"sourceMap": true,

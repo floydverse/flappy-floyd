@@ -29,6 +29,7 @@ export class GameObject {
 		this.y = 0;
 		this.width = 0;
 		this.height = 0;
+		this.rotation = 0;
 		this.velocity = { x: 0, y: 0 };
 
 		// Additional state
@@ -93,7 +94,7 @@ export class Floyd extends GameObject {
 	/**@type {string}*/static type = "Floyd";
 	/**@type {HTMLImageElement}*/static defaultImage;
 	/**@type {HTMLImageElement}*/static flappingImage;
-	/**@type {Player}*/ player;
+	/**@type {Player|null}*/ player;
 
 	// Server properties
 	/**@type {string}*/username;
@@ -119,6 +120,8 @@ export class Floyd extends GameObject {
 		this.height = 46 * scaleFactor;
 		this.rotation = 0;
 		this.velocity = { x: defaultFloydSpeed, y: 0 };
+
+		this.player = null;
 
 		// Server state
 		this.username = "";
@@ -152,13 +155,13 @@ export class Floyd extends GameObject {
 		ctx.save();
 		ctx.textAlign = "center";
 		ctx.fillStyle = "black";
-		ctx.fillText(this.player.username, this.x + this.width / 2 + 1, this.y + 1);
-		ctx.fillStyle = this.player.id === myPlayer.id ? "yellow" : "white";
-		ctx.fillText(this.player.username, this.x + this.width / 2, this.y);
+		ctx.fillText(this.player?.username, this.x + this.width / 2 + 1, this.y + 1);
+		ctx.fillStyle = this.player?.id === myPlayer?.id ? "yellow" : "white";
+		ctx.fillText(this.player?.username, this.x + this.width / 2, this.y);
 		ctx.restore()
 
 		// Draw UI
-		if (this.player.id === myPlayer.id) {
+		if (this.player?.id === myPlayer?.id) {
 			updateHeartsUI(this.hearts);
 			updateInGameScore(this.score, this.currentMultiplier);
 		}
@@ -308,15 +311,15 @@ export class Police extends GameObject {
 		this.state = serverPolice.state;
 		switch (this.state) {
 			case "Reloading": {
-				this.image = /** @type {typeof Police}*/(this.constructor).reloadingImage;
+				this.image = /**@type {typeof Police}*/(this.constructor).reloadingImage;
 				break;
 			}
 			case "Shooting": {
-				this.image = /** @type {typeof Police}*/(this.constructor).shootingImage;
+				this.image = /**@type {typeof Police}*/(this.constructor).shootingImage;
 				break;
 			}
 			default: {
-				this.image = /** @type {typeof Police}*/(this.constructor).defaultImage;
+				this.image = /**@type {typeof Police}*/(this.constructor).defaultImage;
 				break;
 			}
 		}
