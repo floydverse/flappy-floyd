@@ -2,7 +2,8 @@
 
 ### Development:
 - Start a a test webserver with `bunx live-server`
-- Run the main server software in development mode with `bun run --watch server.ts`
+- Configure the local site to use a custom backend server by setting
+`localStorage.server = "<protocol-ws/wss>://<server-address>:<server-port>"` in the browser console.
 
 ### Licensing:
 This project is licensed under the [The GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0)
