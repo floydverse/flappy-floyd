@@ -88,13 +88,14 @@ const defaultFloydSpeed = 150;
 const defaultFloydLift = -400;
 const defaultFloydAngleSpeed = 0.22;
 const defaultFloydAngleMaxVelocity = 600;
+const defaultHearts = 5;
 
 export class Floyd extends GameObject {
 	// Client properties
 	/**@type {string}*/static type = "Floyd";
 	/**@type {HTMLImageElement}*/static defaultImage;
 	/**@type {HTMLImageElement}*/static flappingImage;
-	/**@type {Player|null}*/ player;
+	/**@type {Player|null}*/player;
 
 	// Server properties
 	/**@type {number}*/hearts;
@@ -123,8 +124,8 @@ export class Floyd extends GameObject {
 		this.player = null;
 
 		// Server state
-		this.hearts = 5;
 		this.score = 0;
+		this.hearts = defaultHearts;
 		this.currentMultiplier = 1;
 	}
 

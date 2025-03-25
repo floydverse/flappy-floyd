@@ -21,20 +21,22 @@ export const gameStates = Object.freeze({
 /** @typedef {{ state: GameState; objects: any[]; players: any[]; removedPlayerIds: number[]; removedFloydIds: number[]; removedObjectIds: number[]; }} ServerGame*/
 
 export class Game {
-	/**@type {number}*/ cameraX;
-	/**@type {number}*/ cameraY;
+	/**@type {number}*/cameraX;
+	/**@type {number}*/cameraY;
 
 	// Server properties
 	/**@type {"Pending"|"Started"|"Paused"|"Over"}*/state;
-	/**@type {Floyd[]}*/ floyds;
-	/**@type {GameObject[]}*/ objects;
-	/**@type {Player[]}*/ players;
+	/**@type {Floyd[]}*/floyds;
+	/**@type {GameObject[]}*/objects;
+	/**@type {Player[]}*/players;
 
 	// Client properties
 	// - Copy of floyds for the current player
-	/**@type {Floyd|null}*/ serverFloyd;
-	/**@type {Floyd|null}*/ clientFloyd;
-	/**@type {Floyd|null}*/ spectatingFloyd;
+	/**@type {Floyd|null}*/serverFloyd;
+	/**@type {Floyd|null}*/clientFloyd;
+	/**@type {Floyd|null}*/spectatingFloyd;
+	// Rolling log of server tick dates (TPS)
+	/**@type {number[]}*/tickTimestamps;
 
 	constructor() {
 		this.cameraX = 0;
@@ -48,6 +50,7 @@ export class Game {
 		this.serverFloyd = null;
 		this.clientFloyd = null;
 		this.spectatingFloyd = null;
+		this.tickTimestamps = [];
 	}
 
 	/**
@@ -75,7 +78,8 @@ export class Game {
 		// Debug stats
 		if (debug === true) {
 			stats.innerHTML = `<u>Debug stats:</u><p>FPS: ${Math.floor(1 / dt)}</p><p>Frame delta: ${dt.toPrecision(3)}</p><p>Server TPS: ${
-				ticksPerSecond.toPrecision(3)}</p><p>Player ID: ${myPlayer.id}</p><p>Camera X: ${this.cameraX.toFixed(2)}</p><p>Camera Y: ${this.cameraY.toFixed(2)}</p>`;
+				ticksPerSecond.toPrecision(3)}</p><p>Received TPS: ${this.calculateReceivedTps()}</p><p>Player ID: ${myPlayer.id}</p><p>Camera X: ${
+				this.cameraX.toFixed(2)}</p><p>Camera Y: ${this.cameraY.toFixed(2)}</p>`;
 		}
 		else if (stats.textContent !== "") {
 			stats.textContent = "";
@@ -310,5 +314,15 @@ export class Game {
 				}
 			}
 		}
+
+		// Track received TPS
+		this.tickTimestamps.push(Date.now());
+		const clearWindow = Date.now() - 10000;
+		this.tickTimestamps = this.tickTimestamps.filter(timestamp => timestamp > clearWindow);		
+	}
+
+	calculateReceivedTps() {
+		const lastSecond = Date.now() - 1000;
+		return this.tickTimestamps.filter(timestamp => timestamp > lastSecond).length;
 	}
 }
