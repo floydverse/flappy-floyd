@@ -111,7 +111,7 @@
 						<button type="button" class="grid-button" disabled>Boss rush</button>
 					</div>
 					<div class="party-container">
-						<input type="text" class="big-input grid-input" placeholder="Enter party code">
+						<input type="text" class="big-input grid-input" placeholder="Enter party code" autocapitalize="on" />
 						<button type="button" class="big-input">Join</button>
 					</div>
 				</div>
@@ -119,7 +119,7 @@
 					<p>Matchmaking...</p>
 				</div>
 				<div id="lobbyPage" class="overlay-content">
-					<p>In lobby. Waiting for game to start...</p>
+					<p id="lobbyTitleMessage">In lobby. Waiting for game to start...</p>
 					<div class="lobby-players-container">
 						<p id="lobbyPlayersLabel">Players:</p>
 						<ul id="lobbyPlayers" class="lobby-players"></ul>

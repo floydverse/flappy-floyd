@@ -13,6 +13,7 @@ const heartsDisplay = /**@type {HTMLElement}*/document.getElementById("heartsDis
 const lobbyPlayersLabel = /**@type {HTMLElement}*/document.getElementById("lobbyPlayersLabel");
 const lobbyPlayers = /**@type {HTMLElement}*/document.getElementById("lobbyPlayers");
 const gameContainer = /**@type {HTMLElement}*/document.getElementById("gameContainer");
+const lobbyTitleMessage = /**@type {HTMLElement}*/document.getElementById("lobbyTitleMessage");
 const lobbyStartingMessage = /**@type {HTMLElement}*/document.getElementById("lobbyStartingMessage");
 const gameQuitAudio = /**@type {HTMLAudioElement}*/(document.getElementById("gameQuitAudio"));
 const pauseBtn = /**@type {HTMLButtonElement}*/(document.getElementById("pauseBtn"));
@@ -261,6 +262,7 @@ export let packetHandlers = {
 	},
 	sessionJoin(data) {
 		overlay.dataset.page = "lobby";
+		lobbyTitleMessage.textContent = "In lobby. Waiting for game to start...";
 	},
 	sessionState(data) {
 		lobbyPlayersLabel.textContent = `Players (${data.players.length}/${data.capacity}):`;
@@ -324,7 +326,8 @@ export let packetHandlers = {
 	gameOver(data) {
 		this.gameQuit(null);
 		overlay.dataset.page = "lobby";
-		lobbyStartingMessage.textContent = "Game over! Next game starting soon...";
+		lobbyTitleMessage.textContent = "Game over! Next game starting soon...";
+		lobbyStartingMessage.textContent = "Waiting for players..."
 		game = null;
 	},
 	scoreIncrement(data) {
