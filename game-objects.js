@@ -40,6 +40,14 @@ export class GameObject {
 	drawDebug(ctx, dt) {
 		ctx.fillStyle = this.debugFillStyle;
 		ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+		ctx.save();
+		ctx.rotate(-this.rotation);
+		const infoStr = `${this.constructor.name} { id: ${this.id} }`;
+		ctx.fillStyle = "#000";
+		ctx.fillText(infoStr, -this.width / 2, -this.height / 2 - 15);
+		ctx.fillStyle = "#FFF";
+		ctx.fillText(infoStr, -this.width / 2, -this.height / 2 - 16);
+		ctx.restore();
 	}
 
 	drawSprite(ctx, dt) {

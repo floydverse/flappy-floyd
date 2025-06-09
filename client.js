@@ -206,7 +206,7 @@ function scrollGround(dt) {
 	if (gx2 <= -groundWidth) groundX2 = gx1 + groundWidth;
 }
 
-const game = new Game();
+/**@type {Game|null}*/let game = null;
 
 let lastFrame = performance.now();
 function mainLoop() {
@@ -214,7 +214,7 @@ function mainLoop() {
 	const dt = (now - lastFrame) / 1000
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-	if (game.state !== gameStates.Started) {
+	if (!game || game.state !== gameStates.Started) {
 		// Draw background
 		scrollBackground(dt);
 		// Draw ground
@@ -295,12 +295,14 @@ export let packetHandlers = {
 		}, 100);
 	},
 	gameStart(data) {
+		overlay.style.display = "none";
 		overlay.dataset.page = "game";
 		gameContainer.style.width = data.worldWidth + "px";
 		gameContainer.style.height = data.worldHeight + "px";
 		canvas.width = data.worldWidth;
 		canvas.height = data.worldHeight;
 		bgMusic.play();
+		game = new Game();
 
 		if (player) {
 			game.addPlayer(player);
@@ -311,6 +313,7 @@ export let packetHandlers = {
 	},
 	// Kicked from the game & will no longer receive game updates (no respawn)
 	gameQuit(data) {
+		overlay.style.display = "flex";
 		overlay.dataset.page = "gameQuit";
 		gameQuitScoreText.textContent = "Score: " + (data?.score || 0);
 		bgMusic.pause();
@@ -324,6 +327,7 @@ export let packetHandlers = {
 		this.gameQuit(null);
 		overlay.dataset.page = "lobby";
 		lobbyStartingMessage.textContent = "Game over! Next game starting soon...";
+		game = null;
 	},
 	scoreIncrement(data) {
 		showPlusOne(data.gained);

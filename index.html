@@ -43,13 +43,13 @@
 	<main class="main-content">
 
 		<!-- Contract Section -->
-		<section class="contract-section">
+		<!--<section class="contract-section">
 			<h2 class="contract-header">Contract Address</h2>
 			<div class="contract-line">
 				<span id="contractPlaceholder">GQGcZX7BFsHadhZK4jv3jD3ATKnjSVDZqhjMiEXopump</span>
 				<button id="copyContractBtn">COPY</button>
 			</div>
-		</section>
+		</section>-->
 
 		<!-- GAME CONTAINER -->
 		<div id="gameContainer" class="game-container">
@@ -58,8 +58,9 @@
 			<!-- Top Row => Pause & Mute + Highscore -->
 			<div class="top-row">
 				<div class="game-controls">
-					<button id="pauseBtn" title="Pause/Resume" disabled>❚❚</button>
-					<button id="muteBtn" title="Mute/Unmute">🔊</button>
+					<button id="pauseBtn" title="Quit" disabled>🗙</button>
+					<!--<button id="muteBtn" title="Mute/Unmute">🔊</button>-->
+					<button id="quickSettingsButton" title="Mute/Unmute">🔊</button>
 				</div>
 				<div id="topHighscoreContainer">
 					<span id="topHighscoreText">Highscore: 0</span>
@@ -106,9 +107,9 @@
 						<button type="button" class="grid-button" disabled>Race</button>
 						<button type="button" class="grid-button" disabled>Boss rush</button>
 					</div>
-					<div>
-						<input type="text" placeholder="Enter party code">
-						<button type="button">Join</button>
+					<div class="party-container">
+						<input type="text" class="big-input grid-input" placeholder="Enter party code">
+						<button type="button" class="big-input">Join</button>
 					</div>
 				</div>
 				<div id="loadingPage" class="overlay-content">
@@ -159,8 +160,7 @@
 					<h2>Made with love, by</h2>
 					<ul>
 						<li>Luke</li>
-						<li>rplace.live developers</li>
-						<li>FlappyFLoyd community</li>
+						<li>Floydverse</li>
 					</ul>
 					<h2>Sponsored by</h2>
 					<ul>
@@ -172,6 +172,10 @@
 						<li><s>Maternity Action</s></li>
 					</ul>
 					<h2>Special thanks to</h2>
+					<ul>
+						<li>Luke</li>
+						<li>Nilesh</li>
+					</ul>
 					<em>In loving memory of Floyd</em>
 					<p>Fly high my ni</p>
 				</div>
@@ -290,12 +294,12 @@
 	</main>
 
 	<footer class="footer">
-		<p>© 2024 FlappyFloyd. Powered by Solana.</p>
+		<p>© 2025 Floydverse™ – FlappyFloyd on Solana.</p>
 	</footer>
 
 	<!-- Firebase v8 (non-ESM) -->
-	<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+	<!--<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>-->
 	<script type="module" src="client.js" async defer></script>
 </body>
 </html>
