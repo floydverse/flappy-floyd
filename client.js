@@ -16,7 +16,6 @@ const gameContainer = /**@type {HTMLElement}*/document.getElementById("gameConta
 const lobbyStartingMessage = /**@type {HTMLElement}*/document.getElementById("lobbyStartingMessage");
 const gameQuitAudio = /**@type {HTMLAudioElement}*/(document.getElementById("gameQuitAudio"));
 const pauseBtn = /**@type {HTMLButtonElement}*/(document.getElementById("pauseBtn"));
-const muteBtn = /**@type {HTMLButtonElement}*/document.getElementById("muteBtn");
 const inGameScore = /**@type {HTMLElement}*/document.getElementById("inGameScore");
 const plusOneContainer = /**@type {HTMLElement}*/document.getElementById("plusOneContainer");
 const spectateContainer = /**@type {HTMLElement}*/document.getElementById("spectateContainer");
@@ -53,7 +52,6 @@ document.addEventListener("keydown", (e) => {
 document.addEventListener("mousedown", () => {
 	jump();
 	pauseBtn.blur();
-	muteBtn.blur();
 });
 document.addEventListener("touchstart", () => {
 	jump();

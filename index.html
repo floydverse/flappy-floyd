@@ -58,9 +58,12 @@
 			<!-- Top Row => Pause & Mute + Highscore -->
 			<div class="top-row">
 				<div class="game-controls">
-					<button id="pauseBtn" title="Quit" disabled>🗙</button>
-					<!--<button id="muteBtn" title="Mute/Unmute">🔊</button>-->
-					<button id="quickSettingsButton" title="Mute/Unmute">🔊</button>
+					<button type="button" id="pauseBtn" title="Quit" disabled>🗙</button>
+					<button type="button" id="quickSettingsButton" title="Quick Settings">
+						<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#e3e3e3">
+							<path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/>
+						</svg>
+					</button>
 				</div>
 				<div id="topHighscoreContainer">
 					<span id="topHighscoreText">Highscore: 0</span>
