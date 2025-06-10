@@ -18,7 +18,9 @@ export const gameStates = Object.freeze({
 });
 /**@typedef {keyof typeof gameStates} GameState*/
 
-/** @typedef {{ state: GameState; objects: any[]; players: any[]; removedPlayerIds: number[]; removedFloydIds: number[]; removedObjectIds: number[]; }} ServerGame*/
+/** @typedef {{ state: GameState; objects: any[]; players: any[]; removedPlayerIds: number[]; removedFloydIds: number[]; removedObjectIds: number[]; timestamp: number; }} ServerGame */
+
+/** @typedef {{ serverTimestamp: number, receivedTimetamp: number }} TickRecord */
 
 export class Game {
 	/**@type {number}*/cameraX;
@@ -36,7 +38,7 @@ export class Game {
 	/**@type {Floyd|null}*/clientFloyd;
 	/**@type {Floyd|null}*/spectatingFloyd;
 	// Rolling log of server tick dates (TPS)
-	/**@type {number[]}*/tickTimestamps;
+	/**@type {TickRecord[]}*/tickHistory;
 
 	constructor() {
 		this.cameraX = 0;
@@ -50,7 +52,7 @@ export class Game {
 		this.serverFloyd = null;
 		this.clientFloyd = null;
 		this.spectatingFloyd = null;
-		this.tickTimestamps = [];
+		this.tickHistory = [];
 	}
 
 	/**
@@ -78,8 +80,8 @@ export class Game {
 		// Debug stats
 		if (debug === true) {
 			stats.innerHTML = `<u>Debug stats:</u><p>FPS: ${Math.floor(1 / dt)}</p><p>Frame delta: ${dt.toPrecision(3)}</p><p>Server TPS: ${
-				ticksPerSecond.toPrecision(3)}</p><p>Received TPS: ${this.calculateReceivedTps()}</p><p>Player ID: ${myPlayer.id}</p><p>Camera X: ${
-				this.cameraX.toFixed(2)}</p><p>Camera Y: ${this.cameraY.toFixed(2)}</p>`;
+				ticksPerSecond.toPrecision(3)}</p><p>Received TPS: ${this.calculateReceivedTps()}</p><p>Server tick delta: ${this.calculateServerTickDelta()
+				}</p><p>Player ID: ${myPlayer.id}</p><p>Camera X: ${this.cameraX.toFixed(2)}</p><p>Camera Y: ${this.cameraY.toFixed(2)}</p>`;
 		}
 		else if (stats.textContent !== "") {
 			stats.textContent = "";
@@ -316,13 +318,19 @@ export class Game {
 		}
 
 		// Track received TPS
-		this.tickTimestamps.push(Date.now());
+		this.tickHistory.push({ serverTimestamp: serverGame.timestamp, receivedTimetamp: Date.now() });
 		const clearWindow = Date.now() - 10000;
-		this.tickTimestamps = this.tickTimestamps.filter(timestamp => timestamp > clearWindow);		
+		this.tickHistory = this.tickHistory.filter(tick => tick.serverTimestamp > clearWindow);		
 	}
 
 	calculateReceivedTps() {
 		const lastSecond = Date.now() - 1000;
-		return this.tickTimestamps.filter(timestamp => timestamp > lastSecond).length;
+		return this.tickHistory.filter(tick => tick.receivedTimetamp > lastSecond).length;
+	}
+
+	calculateServerTickDelta() {
+		const now = Date.now();
+		const lastTick = this.tickHistory[this.tickHistory.length - 1];
+		return now - lastTick.serverTimestamp;
 	}
 }
