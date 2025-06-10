@@ -80,8 +80,9 @@ export class Game {
 		// Debug stats
 		if (debug === true) {
 			stats.innerHTML = `<u>Debug stats:</u><p>FPS: ${Math.floor(1 / dt)}</p><p>Frame delta: ${dt.toPrecision(3)}</p><p>Server TPS: ${
-				ticksPerSecond.toPrecision(3)}</p><p>Received TPS: ${this.calculateReceivedTps()}</p><p>Server tick delta: ${this.calculateServerTickDelta()
-				}</p><p>Player ID: ${myPlayer.id}</p><p>Camera X: ${this.cameraX.toFixed(2)}</p><p>Camera Y: ${this.cameraY.toFixed(2)}</p>`;
+				ticksPerSecond.toPrecision(3)}</p><p>Received TPS: ${this.calculateReceivedTps()}</p><p>Mean recv. latency: ${
+				this.calculateReceiveLatency().toPrecision(3)}ms</p><p>Player ID: ${myPlayer.id}</p><p>Camera X: ${
+				this.cameraX.toFixed(2)}</p><p>Camera Y: ${this.cameraY.toFixed(2)}</p>`;
 		}
 		else if (stats.textContent !== "") {
 			stats.textContent = "";
@@ -328,9 +329,8 @@ export class Game {
 		return this.tickHistory.filter(tick => tick.receivedTimetamp > lastSecond).length;
 	}
 
-	calculateServerTickDelta() {
-		const now = Date.now();
-		const lastTick = this.tickHistory[this.tickHistory.length - 1];
-		return now - lastTick.serverTimestamp;
+	calculateReceiveLatency() {
+		const pongDeltas = this.tickHistory.map(tick => tick.receivedTimetamp - tick.serverTimestamp);
+		return pongDeltas.reduce((accumulator, delta) => accumulator + delta) / pongDeltas.length;
 	}
 }
