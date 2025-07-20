@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>FlappyFloyd</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="game.css">
+	<script type="module" src="client.js"></script>
+</head>
+<body>
+	<div id="gameContainer" class="game-container">
+		<canvas id="gameCanvas" width="360" height="640"></canvas>
+
+		<!-- Top Row => Pause & Mute + Highscore -->
+		<div class="top-row">
+			<div class="game-controls">
+				<button type="button" id="pauseBtn" title="Quit" disabled>🗙</button>
+				<button type="button" id="quickSettingsButton" title="Quick Settings">
+					<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#e3e3e3">
+						<path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/>
+					</svg>
+				</button>
+			</div>
+			<div id="topHighscoreContainer">
+				<span id="topHighscoreText">Highscore: 0</span>
+			</div>
+		</div>
+
+		<!-- Debug statistics -->
+		<div id="stats"></div>
+
+		<!-- HUD (Hearts pinned) -->
+		<div id="hud">
+			<div id="heartsDisplay"></div>
+		</div>
+
+		<!--Spectate-->
+		<div id="spectateContainer" class="spectate-container" style="display: none;">
+			<p id="currentlySpectatingText" class="spectate-title">Currently spectating: Nobody</p>
+			<div class="spectate-button-container">
+				<button type="button" id="spectatePrevBtn" class="spectate-button big-button">&lt;</button>
+				<button type="button" id="spectateNextBtn" class="spectate-button big-button">&gt;</button>
+			</div>
+		</div>
+
+		<!-- In-game Score & multiplier -->
+		<div id="inGameScoreContainer">
+			<div id="inGameScore">0</div>
+			<div id="multiplierText"></div>
+		</div>
+
+		<!-- Single overlay => Start + GameOver -->
+		<div class="overlay" id="overlay" data-page="start">
+			<div id="startPage" class="overlay-content">
+				<div>
+					<h2>FlappyFloyd Classic</h2>
+					<button type="button" id="startBtn" class="big-button">Start Game</button>
+					<p id="scoreText">Score: 0</p>
+					<p id="highScoreText">Highscore: 0</p>
+				</div>
+				<hr>
+				<h3>All gamemodes:</h3>
+				<div class="button-grid">
+					<button type="button" class="grid-button" style="border: 2px solid green;">Classic</button>
+					<button type="button" class="grid-button" disabled>Battle royale</button>
+					<button type="button" class="grid-button" disabled>Race</button>
+					<button type="button" class="grid-button" disabled>Boss rush</button>
+				</div>
+				<div class="party-container">
+					<input type="text" class="big-input grid-input" placeholder="Enter party code" autocapitalize="on" />
+					<button type="button" class="big-input" disabled>Join</button>
+				</div>
+			</div>
+			<div id="loadingPage" class="overlay-content">
+				<p>Matchmaking...</p>
+			</div>
+			<div id="lobbyPage" class="overlay-content">
+				<p id="lobbyTitleMessage">In lobby. Waiting for game to start...</p>
+				<div class="lobby-players-container">
+					<p id="lobbyPlayersLabel">Players:</p>
+					<ul id="lobbyPlayers" class="lobby-players"></ul>
+				</div>
+				<p id="lobbyStartingMessage"></p>
+			</div>
+			<div id="gameQuitPage" class="overlay-content">
+				<p id="gameQuitText">Game Over!</p>
+				<p id="gameQuitScoreText">Score: 0</p>
+				<audio id="gameQuitAudio" src="assets/gameover.wav"></audio>
+				<div class="game-over-options">
+					<button type="button" id="spectateBtn" class="big-button">Spectate</button>
+					<button type="button" id="quitBtn" class="big-button">Quit</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Quote marquee -->
+		<div class="quote-marquee">
+			<div class="quotes">
+				<div class="quote">"Watch out for that knee!"</div>
+				<div class="quote">"Fent, fent, fent..."</div>
+				<div class="quote">"Knock that pipe down!"</div>
+				<div class="quote">"Up, up, and away!"</div>
+			</div>
+		</div>
+		<div id="plusOneContainer"></div>
+
+		<!-- Credits -->
+		<div class="overlay credits-container" style="display: none;">
+			<div class="credits">
+				<h1>FlappyFloyd</h1>
+				<em>A game about floyds, flapping</em>
+				<hr style="width: 64px; margin: 32px; border-color: grey;">
+				<h2>Made with love, by</h2>
+				<ul>
+					<li>Luke</li>
+					<li>Floydverse</li>
+				</ul>
+				<h2>Sponsored by</h2>
+				<ul>
+					<li><s>Microsoft</s></li>
+					<li>Pump.fun</li>
+					<li><s>Blackrock</s></li>
+					<li><s>The BLM foundation</s></li>
+					<li>The FlappyFloyd community</li>
+					<li><s>Maternity Action</s></li>
+				</ul>
+				<h2>Special thanks to</h2>
+				<ul>
+					<li>Luke</li>
+					<li>Nilesh</li>
+				</ul>
+				<em>In loving memory of Floyd</em>
+				<p>Fly high my ni</p>
+			</div>
+			<div class="credits-fade"></div>
+		</div>
+	</div>
+</body>
+</html>

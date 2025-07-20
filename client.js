@@ -120,8 +120,27 @@ const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 ctx.imageSmoothingEnabled = false;
 
 // BG music
-const bgMusic = new Audio("assets/flappyfloydonsolana.mp3");
-bgMusic.loop = true;
+const audioContext = new AudioContext();
+const bgMusicUrl = "assets/flappyfloydonsolana.mp3";
+/**@type {AudioBufferSourceNode|null}*/let bgMusicSource = null;
+/**@type {AudioBuffer|null}*/let bgMusicBuffer = null;
+fetch(bgMusicUrl)
+	.then(response => response.arrayBuffer())
+	.then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+	.then(audioBuffer => {
+		bgMusicBuffer = audioBuffer;
+	});
+
+async function startBackgroundMusic() {
+	if (bgMusicSource) {
+		bgMusicSource.stop();
+	}
+	bgMusicSource = audioContext.createBufferSource();
+	bgMusicSource.buffer = bgMusicBuffer;
+	bgMusicSource.loop = true;
+	bgMusicSource.connect(audioContext.destination);
+	bgMusicSource.start();
+}
 
 // Graphics
 export const bgImg = new Image();
@@ -301,7 +320,7 @@ export let packetHandlers = {
 		gameContainer.style.height = data.worldHeight + "px";
 		canvas.width = data.worldWidth;
 		canvas.height = data.worldHeight;
-		bgMusic.play();
+		startBackgroundMusic();
 		game = new Game();
 
 		if (player) {
