@@ -1,10 +1,10 @@
 @font-face {
 	font-family: "PressStart2P";
-	src: url("./fonts/PressStart2P-Regular.ttf") format("truetype");
+	src: url("/fonts/PressStart2P-Regular.ttf") format("truetype");
 }
 @font-face {
 	font-family: "RobotoBlack";
-	src: url("./fonts/Roboto-Black.ttf") format("truetype");
+	src: url("/fonts/Roboto-Black.ttf") format("truetype");
 }
 * {
 	margin: 0;
@@ -58,7 +58,7 @@ body {
 	margin-left: 10px;
 }
 .game-controls button {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 1.2rem;
 	background: #fff;
 	color: #000;
@@ -80,7 +80,7 @@ body {
 	margin-right: 10px;
 }
 #topHighscoreText {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 0.9rem;
 	background: #fff;
 	color: #000;
@@ -132,13 +132,13 @@ body {
 	pointer-events: none;
 }
 #inGameScore {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 2.2rem;
 	text-shadow: 1px 1px 2px #000;
 	margin-bottom: 4px;
 }
 #multiplierText {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 1rem;
 	color: cyan;
 	text-shadow: 1px 1px 2px #000;
@@ -155,7 +155,7 @@ body {
 .plusOne {
 	color: #00ff00;
 	font-size: 1.6rem;
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	text-shadow: 1px 1px 2px #000;
 	animation: fadeUp 1s forwards;
 }
@@ -182,10 +182,8 @@ body {
 	text-align: center;
 	display: none;
 }
-.overlay[data-page="start"] > #startPage,
-.overlay[data-page="loading"] > #loadingPage,
-.overlay[data-page="lobby"] > #lobbyPage,
-.overlay[data-page="gameQuit"] > #gameQuitPage {
+.overlay[data-page="start"] > #startPage, .overlay[data-page="loading"] > #loadingPage,
+.overlay[data-page="lobby"] > #lobbyPage, .overlay[data-page="gameQuit"] > #gameQuitPage {
 	display: block !important;
 }
 .overlay[data-page="game"] {
@@ -246,7 +244,7 @@ body {
 }
 .spectate-title {
 	color: yellow;
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 10px;
 	text-shadow: 1px 1px black;
 	background: #80808059;
@@ -325,7 +323,7 @@ body {
 
 /* Shared button styles */
 .big-button, .grid-button {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	background: #444;
 	color: #fff;
 	border: 2px solid #000;
@@ -356,7 +354,7 @@ body {
 	text-align: center;
 }
 .big-input {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	background: #444;
 	color: #fff;
 	border: 2px solid #000;
@@ -397,10 +395,10 @@ body {
 	color: #ffb347;
 	font-size: 0.8rem;
 	line-height: 30px;
-	font-family: 'RobotoBlack', sans-serif;
+	font-family: "RobotoBlack", sans-serif;
 }
 @keyframes quotesRoll {
-	0%   { transform: translateX(0%); }
+	0%   {transform: translateX(0%); }
 	25%  { transform: translateX(-100%); }
 	50%  { transform: translateX(-200%); }
 	75%  { transform: translateX(-300%); }

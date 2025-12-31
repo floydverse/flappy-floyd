@@ -1,11 +1,11 @@
 /* ========== FONTS ========== */
 @font-face {
 	font-family: "PressStart2P";
-	src: url("./fonts/PressStart2P-Regular.ttf") format("truetype");
+	src: url("fonts/PressStart2P-Regular.ttf") format("truetype");
 }
 @font-face {
-	font-family: 'RobotoBlack';
-	src: url("./fonts/Roboto-Black.ttf") format("truetype");
+	font-family: "RobotoBlack";
+	src: url("fonts/Roboto-Black.ttf") format("truetype");
 }
 
 /* RESET */
@@ -26,7 +26,7 @@ button:disabled {
 /* BODY BACKGROUND */
 body {
 	background: #000;
-	font-family: 'RobotoBlack', sans-serif;
+	font-family: "RobotoBlack", sans-serif;
 	color: #eee;
 	overflow-x: hidden;
 	overflow-y: auto;
@@ -91,14 +91,14 @@ hr {
 	box-shadow: 0 0 4px rgba(0,0,0,0.5);
 }
 .main-title {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 2em;
 	color: #fff;
 	text-shadow: 0 0 6px rgba(255,179,71,0.6);
 	margin-bottom: 5px;
 }
 .subtitle {
-	font-family: 'RobotoBlack', sans-serif;
+	font-family: "RobotoBlack", sans-serif;
 	font-size: 1em;
 	color: #ccc;
 }
@@ -113,7 +113,7 @@ hr {
 	margin-bottom: 20px;
 }
 .contract-header {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 1.2em;
 	color: #ffb347;
 	text-shadow: 0 0 4px rgba(255,179,71,0.5);
@@ -128,7 +128,7 @@ hr {
 	max-width: 100%;
 }
 #contractPlaceholder {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 0.95rem;
 	background: #333;
 	padding: 4px 8px;
@@ -142,7 +142,7 @@ hr {
 	max-width: 100%;
 }
 #copyContractBtn {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 0.8rem;
 	background: #444;
 	color: #fff;
@@ -177,7 +177,7 @@ hr {
 	margin-bottom: 20px;
 }
 .pumpfun-section h2 {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 1.2em;
 	color: #ffb347;
 	margin-bottom: 10px;
@@ -209,7 +209,7 @@ hr {
 	font-size: 0.85em;
 	color: #ccc;
 	line-height: 1.3em;
-	font-family: 'RobotoBlack', sans-serif;
+	font-family: "RobotoBlack", sans-serif;
 }
 .pumpfun-circle {
 	background: #555; 
@@ -231,9 +231,8 @@ hr {
 	box-shadow: 0 0 10px rgba(0,0,0,0.6);
 	margin-bottom: 20px;
 }
-.assets-section h2, .multiplier-section h2,
-.leaderboard-section h2, .fent-counter-section h2 {
-	font-family: 'PressStart2P', sans-serif;
+.assets-section h2, .multiplier-section h2, .leaderboard-section h2, .fent-counter-section h2 {
+	font-family: "PressStart2P", sans-serif;
 	font-size: 1.2em;
 	color: #ffb347;
 	margin-bottom: 10px;
@@ -268,7 +267,7 @@ hr {
 	margin-bottom: 8px;
 }
 .asset-item h3 {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 1rem;
 	margin-bottom: 6px;
 	color: #ffb347;
@@ -294,7 +293,7 @@ hr {
 	font-size: 0.9rem;
 }
 #shareScoreBtn {
-	font-family: 'PressStart2P', sans-serif;
+	font-family: "PressStart2P", sans-serif;
 	font-size: 0.9rem;
 	background: #444;
 	color: #fff;
