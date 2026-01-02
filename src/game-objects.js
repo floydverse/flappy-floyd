@@ -1,5 +1,5 @@
 "use strict";
-import { debug, player as myPlayer, Player, updateHeartsUI, updateInGameScore } from "./client.js";
+import { debug, player as myPlayer, Player, updateHeartsUI, updateScoreUI } from "./client.js";
 import { clamp, lerp } from "./math.js";
 
 export let gameObjects = {};
@@ -170,7 +170,7 @@ export class Floyd extends GameObject {
 		// Draw UI
 		if (this.player?.id === myPlayer?.id) {
 			updateHeartsUI(this.hearts);
-			updateInGameScore(this.score, this.currentMultiplier);
+			updateScoreUI(this.score, this.currentMultiplier);
 		}
 	}
 

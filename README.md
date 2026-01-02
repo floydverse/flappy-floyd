@@ -1,9 +1,10 @@
 # Flappy Floyd
 
 ### Development:
-- Start a a test webserver with `bunx live-server`
-- Configure the local site to use a custom backend server by setting
-`localStorage.server = "<protocol-ws/wss>://<server-address>:<server-port>"` in the browser console.
+- Start a a test webserver with `bun run dev`
+- Configure the local site to use a custom backend server by setting `flappy-floyd.server` in the browser console.
+ - Format: `localStorage.setItem("flappy-floyd.server", "<protocol-(ws/wss)>://<server-address>:<server-port>")`
+ - For example: `localStorage.setItem("flappy-floyd.server", "ws://localhost:420")`
 
 ### Licensing:
 This project is licensed under the [The GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0)

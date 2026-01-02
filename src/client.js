@@ -25,7 +25,12 @@ const spectatePrevBtn = /**@type {HTMLButtonElement}*/document.getElementById("s
 const spectateNextBtn = /**@type {HTMLButtonElement}*/document.getElementById("spectateNextBtn");
 const quitBtn = /**@type {HTMLButtonElement}*/document.getElementById("quitBtn");
 const gameQuitScoreText = /**@type {HTMLElement}*/document.getElementById("gameQuitScoreText");
-const heartIcon = "assets/heart.png";
+
+// Reusable UI
+const heartEl = document.createElement("img");
+heartEl.src = "/assets/heart.png";
+heartEl.className = "heart-img";
+
 
 /* --------------------------------------------------------------------------------------------------- */
 /* Actions sent to server                                                                              */
@@ -158,7 +163,7 @@ pipeBottom.src = "assets/pipebottom.png";
 
 
 // Game UI
-export function updateScoreUI(score) {
+export function updateMenuScoreUI(score) {
 	scoreText.textContent = "Score: " + (score || 0);
 }
 
@@ -167,7 +172,7 @@ export function updateHighScoreUI(highScore) {
 	topHighscoreText.textContent = "Highscore: " + (highScore || 0);
 }
 
-export function updateInGameScore(score, multiplier) {
+export function updateScoreUI(score, multiplier) {
 	inGameScore.textContent = (score || 0).toString();
 	if (multiplier > 1) {
 		const hue = (performance.now() / 10) % 360;
@@ -190,12 +195,14 @@ export function showPlusOne(amount) {
 }
 
 export function updateHeartsUI(hearts) {
-	heartsDisplay.innerHTML = "";
-	for (let i = 0; i < hearts; i++) {
-		let im = document.createElement("img");
-		im.src = heartIcon;
-		im.className = "heart-img";
-		heartsDisplay.appendChild(im);
+	let heartsDiff = hearts - heartsDisplay.childElementCount;
+	while (heartsDiff > 0) {
+		heartsDisplay.appendChild(heartEl.cloneNode());
+		heartsDiff--;
+	}
+	while (heartsDiff < 0) {
+		heartsDisplay.removeChild(heartsDisplay.lastElementChild);
+		heartsDiff++;
 	}
 }
 
@@ -351,7 +358,7 @@ export let packetHandlers = {
 	},
 	scoreIncrement(data) {
 		showPlusOne(data.gained);
-		updateScoreUI(data.score);	
+		updateMenuScoreUI(data.score);	
 	}
 };
 
@@ -361,7 +368,7 @@ export let packetHandlers = {
 
 let ws = null;
 const maxRetries = 5;
-const serverAddress = localStorage.server || "wss://server.rplace.live/flappy-server";
+const serverAddress = localStorage.getItem("flappy-floyd.server") || "wss://server.rplace.live/flappy-server";
 let retryCount = 0;
 
 function connectWebSocket() {
